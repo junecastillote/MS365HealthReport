@@ -1,7 +1,6 @@
 Function New-MS365IncidentReport {
     [cmdletbinding(DefaultParameterSetName = 'bySecret')]
     param (
-
         [parameter()]
         [string]
         $OrganizationName,
@@ -12,59 +11,48 @@ Function New-MS365IncidentReport {
         [guid]
         $ClientID,
 
-        # Parameter help description
         [parameter(Mandatory, ParameterSetName = 'bySecret')]
         [string]
         $ClientSecret,
 
-        # Parameter help description
         [parameter(Mandatory, ParameterSetName = 'byCertificate')]
         [System.Security.Cryptography.X509Certificates.X509Certificate2]
         $ClientCertificate,
 
-        # Parameter help description
         [parameter(Mandatory, ParameterSetName = 'byThumbprint')]
         [string]
         $ClientCertificateThumbprint,
 
-        # Parameter help description
         [parameter(Mandatory, ParameterSetName = 'byCertificate')]
         [parameter(Mandatory, ParameterSetName = 'byThumbprint')]
         [parameter(Mandatory, ParameterSetName = 'bySecret')]
         [string]
         $TenantID,
 
-        # Parameter help description
         [Parameter()]
         [datetime]
         $LastUpdatedTime,
 
-        # Parameter help description
         [Parameter()]
         [string[]]
         $Workload,
 
-        # Parameter help description
         [Parameter()]
         [switch]
         $SendEmail,
 
-        # Parameter help description
         [Parameter()]
         [mailaddress]
         $From,
 
-        # Parameter help description
         [Parameter()]
         [mailaddress[]]
         $To,
 
-        # Parameter help description
         [Parameter()]
         [mailaddress[]]
         $CC,
 
-        # Parameter help description
         [Parameter()]
         [mailaddress[]]
         $Bcc
@@ -186,32 +174,31 @@ Function New-MS365IncidentReport {
                         }
                     }
 
-                    $mailBody = $mailBody | ConvertTo-Json -Depth 4
-                    #$ServicePoint = [System.Net.ServicePointManager]::FindServicePoint('https://graph.microsoft.com')
+                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint('https://graph.microsoft.com')
 
                     # Get GraphAPI Token
                     if ($pscmdlet.ParameterSetName -eq 'bySecret') {
                         $SecureClientSecret = New-Object System.Security.SecureString
                         $ClientSecret.toCharArray() | ForEach-Object { $SecureClientSecret.AppendChar($_) }
-                        $GraphApiOAuth2 = Get-MsalToken -ClientId $ClientID -ClientSecret $SecureClientSecret -TenantId $tenantID -Scopes 'https://graph.microsoft.com/.default' -ErrorAction Stop
+                        $GraphApiOAuth2 = Get-MsalToken -ClientId $ClientID -ClientSecret $SecureClientSecret -TenantId $tenantID -Scopes @('https://graph.microsoft.com/Mail.Send') -ErrorAction Stop
                     }
                     elseif ($pscmdlet.ParameterSetName -eq 'byCertificate') {
-                        $GraphApiOAuth2 = Get-MsalToken -ClientId $ClientID -ClientCertificate $ClientCertificate -TenantId $tenantID -Scopes 'https://graph.microsoft.com/.default' -ErrorAction Stop
+                        $GraphApiOAuth2 = Get-MsalToken -ClientId $ClientID -ClientCertificate $ClientCertificate -TenantId $tenantID -Scopes @('https://graph.microsoft.com/Mail.Send') -ErrorAction Stop
                     }
                     elseif ($pscmdlet.ParameterSetName -eq 'byThumbprint') {
-                        $GraphApiOAuth2 = Get-MsalToken -ClientId $ClientID -ClientCertificate (Get-Item Cert:\CurrentUser\My\$($ClientCertificateThumbprint)) -TenantId $tenantID -Scopes 'https://graph.microsoft.com/.default' -ErrorAction Stop
+                        $GraphApiOAuth2 = Get-MsalToken -ClientId $ClientID -ClientCertificate (Get-Item Cert:\CurrentUser\My\$($ClientCertificateThumbprint)) -TenantId $tenantID -Scopes @('https://graph.microsoft.com/Mail.Send') -ErrorAction Stop
                     }
 
                     $header = @{'Authorization' = "Bearer $($GraphApiOAuth2.AccessToken)" }
 
-                    $null = Invoke-RestMethod -Method Post -Uri "https://graph.microsoft.com/v1.0/users/$($From)/sendmail" -Body $mailbody -Headers $header -ContentType application/json
-                    #$null = $ServicePoint.CloseConnectionGroup("")
+                    $null = Invoke-RestMethod -Method Post -Uri "https://graph.microsoft.com/v1.0/users/$($From)/sendmail" -Body ($mailBody | ConvertTo-Json -Depth 4) -Headers $header -ContentType application/json
+
+                    $null = $ServicePoint.CloseConnectionGroup('')
                 }
                 catch {
                     Write-Error "Failed to send Alert for $($event.id). $($_.Exception.Message)"
                 }
             }
-
         }
     }
 }
