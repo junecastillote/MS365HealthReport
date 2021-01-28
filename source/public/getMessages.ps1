@@ -18,7 +18,7 @@ Function Get-MS365Messages {
         [parameter()]
         [datetime]$LastUpdatedTime
     )
-    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint('https://manage.office.com')
+    # $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint('https://manage.office.com')
     $tenantID = ($token | Get-JWTDetails).tid
     $header = @{'Authorization' = "Bearer $($Token)" }
     $uri = "https://manage.office.com/api/v1.0/$($tenantID)/ServiceComms/Messages"
@@ -43,6 +43,6 @@ Function Get-MS365Messages {
     if ($LastUpdatedTime) {
         $result = $result | Where-Object {[datetime]$_.LastUpdatedTime -ge $LastUpdatedTime}
     }
-    $null = $ServicePoint.CloseConnectionGroup("")
+    # $null = $ServicePoint.CloseConnectionGroup("")
     return $result
 }

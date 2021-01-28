@@ -253,14 +253,14 @@ Function New-MS365IncidentReport {
                     }
 
                     ## Send email
-                    $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint('https://graph.microsoft.com')
-                    Write-Host "Sending Alert for $($event.id)"
+                    # $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint('https://graph.microsoft.com')
+                    Write-Output "Sending Alert for $($event.id)"
                     $null = Invoke-RestMethod -Method Post -Uri "https://graph.microsoft.com/v1.0/users/$($From)/sendmail" -Body $($mailBody | ConvertTo-Json -Depth 4) -Headers $GraphAPIHeader -ContentType application/json
-                    $null = $ServicePoint.CloseConnectionGroup('')
+                    # $null = $ServicePoint.CloseConnectionGroup('')
 
                 }
                 catch {
-                    Write-Output "Failed to send Alert for $($event.id). $($_.Exception.Message)"
+                    Write-Output "Failed to send Alert for $($event.id) | $($_.Exception.Message)"
                     return $null
                 }
             }
