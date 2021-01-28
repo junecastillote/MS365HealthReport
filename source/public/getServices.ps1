@@ -1,5 +1,5 @@
 # Function to List all Office 365 subscribed services in the Tenant
-Function Get-m365Service {
+Function Get-MS365SubscribedServices {
     [cmdletbinding()]
     param(
         [parameter(Mandatory, Position = 0)]

@@ -1,5 +1,5 @@
 # Function to List all current Office 365 service status
-Function Get-m365Status {
+Function Get-MS365CurrentStatus {
     [cmdletbinding()]
     param(
         [parameter(Mandatory, Position = 0)]

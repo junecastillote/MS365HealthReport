@@ -1,0 +1,35 @@
+#section {
+    font-family: "Segoe UI";
+    width: fit-content;
+    border-collapse: collapse;
+}
+
+#section th {
+    font-size: 24px;
+    text-align: left;
+    padding-top: 5px;
+    padding-bottom: 4px;
+    background-color: #fff;
+    color: #000;
+}
+
+#data {
+    font-family: "Segoe UI";
+    width: fit-content;
+    border-collapse: collapse;
+    font-size: 15px;
+    padding-top: 5px;
+    padding-bottom: 4px;
+    text-align: left;
+    vertical-align: top;
+}
+
+#data td, #data th {
+    border: 1px solid #DDD;
+    padding: 3px 7px 2px 7px;
+}
+
+#data th {
+    background-color: #00B388;
+    color: #fff;
+}

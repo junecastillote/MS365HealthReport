@@ -1,2 +1,3 @@
 
-lzex.ml.auth.ps1
+auth.ps1
+run-test.ps1

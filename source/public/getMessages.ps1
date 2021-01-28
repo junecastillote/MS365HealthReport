@@ -1,5 +1,5 @@
 # Function to get Office 365 Messages
-Function Get-M365Messages {
+Function Get-MS365Messages {
     [cmdletbinding()]
     param(
         [parameter(Mandatory, Position = 0)]
@@ -27,7 +27,7 @@ Function Get-M365Messages {
         $uri = $uri+"`?`$filter=MessageType eq `'$MessageType`'"
     }
 
-    $messages = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get -ContentType 'application/json')
+    $messages = (Invoke-RestMethod -Uri $uri -Headers $header -Method Get -ContentType "application/json")
 
     $result = @()
     # Filter by workload if $workload is specified
