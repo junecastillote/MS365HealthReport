@@ -194,4 +194,4 @@ New-MS365IncidentReport @reportSplat
 
 ![Sample run](docs/images/image02.png)<br>Sample run
 
-![Email report](docs/images/image01.png)<br>Email repor
+![Email report](docs/images/image01.png)<br>Email report
