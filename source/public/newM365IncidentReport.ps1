@@ -61,10 +61,13 @@ Function New-MS365IncidentReport {
         [string[]]
         $Bcc,
 
-        # Parameter help description
         [Parameter()]
         [boolean]
-        $WriteReportToDisk = $true
+        $WriteReportToDisk = $true,
+
+        [Parameter()]
+        [boolean]
+        $WriteRawJSONToDisk = $false
     )
     $ModuleInfo = Get-Module MS365HealthReport
     $Now = Get-Date
@@ -163,6 +166,7 @@ Function New-MS365IncidentReport {
     if ($events.Count -gt 0) {
         foreach ($event in $events) {
             $event_id_file = "$outputDir\$($event.ID).html"
+            $event_id_json_file = "$outputDir\$($event.ID).json"
             $htmlBody = [System.Collections.ArrayList]@()
             $mailSubject = '[' + $event.Status + '] ' + $event.ID + ' | ' + $event.WorkloadDisplayName + ' | ' + $event.Title
             $null = $htmlBody.Add("<html><head><title>$($mailSubject)</title>")
@@ -189,7 +193,13 @@ Function New-MS365IncidentReport {
                     }
                 ) + '</td></tr>')
 
-            $null = $htmlBody.Add('<tr><th>Latest Message</th><td>' + ($event.Messages[-1].MessageText).Replace("`n", "<br />") + '</td></tr>')
+
+            # https://4sysops.com/archives/dealing-with-smart-quotes-in-powershell/
+            $latestMessage = ($event.Messages[-1].MessageText) -replace "`n", "<br />"
+            $latestMessage = $latestMessage -replace '[\u2019\u2018]',"'"
+            $latestMessage = $latestMessage -replace '[\u201C\u201D]','"'
+
+            $null = $htmlBody.Add('<tr><th>Latest Message</th><td>' + $latestMessage + '</td></tr>')
             $null = $htmlBody.Add('</table>')
 
             #$null = $htmlBody.Add('<p><table id="section">')
@@ -203,7 +213,6 @@ Function New-MS365IncidentReport {
             if ($WriteReportToDisk -eq $true) {
                 $htmlBody | Out-File $event_id_file -Force
             }
-
 
             if ($SendEmail -eq $true) {
 
@@ -252,10 +261,16 @@ Function New-MS365IncidentReport {
                         $mailBody.Message += @{BccRecipients = $BccAddressJSON }
                     }
 
+                    $mailBody = $($mailBody | ConvertTo-Json -Depth 4)
+
+                    if ($WriteRawJSONToDisk) {
+                        $mailBody | Out-File $event_id_json_file -Force
+                    }
+
                     ## Send email
                     # $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint('https://graph.microsoft.com')
                     Write-Output "Sending Alert for $($event.id)"
-                    $null = Invoke-RestMethod -Method Post -Uri "https://graph.microsoft.com/v1.0/users/$($From)/sendmail" -Body $($mailBody | ConvertTo-Json -Depth 4) -Headers $GraphAPIHeader -ContentType application/json
+                    $null = Invoke-RestMethod -Method Post -Uri "https://graph.microsoft.com/v1.0/users/$($From)/sendmail" -Body $mailBody -Headers $GraphAPIHeader -ContentType application/json
                     # $null = $ServicePoint.CloseConnectionGroup('')
 
                 }

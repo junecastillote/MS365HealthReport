@@ -1,3 +1,4 @@
 *ignore*
 *.cer
 run-test.ps1
+*.zip

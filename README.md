@@ -28,6 +28,11 @@ Retrieve the Office 365 Service Health Data using the Office 365 Management API,
 
 ## Release Notes
 
+**V1.3**
+
+- Code cleanup.
+- Fixed some JSON related errors.
+
 **V1.2**
 
 - Add code to force TLS 1.2 connection [Issue #2](https://github.com/junecastillote/MS365HealthReport/issues/1)
