@@ -28,6 +28,10 @@ Retrieve the Office 365 Service Health Data using the Office 365 Management API,
 
 ## Release Notes
 
+**V1.2**
+
+- Add code to force TLS 1.2 connection [Issue #2](https://github.com/junecastillote/MS365HealthReport/issues/1)
+
 **v1.1**
 
 - Added logic to replace smart quotes in messages [Issue #1](https://github.com/junecastillote/MS365HealthReport/issues/1)
@@ -35,10 +39,16 @@ Retrieve the Office 365 Service Health Data using the Office 365 Management API,
 ## Requirements
 
 - A registered Azure AD (OAuth) App with the following settings:
+  - Application Name: *MS365HealthReport*
   - API: *Microsoft Graph*
-  - Permission Type: *Application*
-  - Permission(s):
-    - Mail.Send - *For sending the report by email.*
+    - Permission Type: *Application*
+    - Permission(s): *Mail.Send*
+  - API: *Office 365 Management APIs*
+    - Permission Type: *Application*
+    - Permission(s): *ServiceHealth.Read*
+
+  ![Api Permissions](docs/images/api_permissions.png)<br>API Permissions
+
 - Windows PowerShell 5.1 or PowerShell 7.1+ on a Windows Host.
 - The [*MSAL.PS PowerShell Module*](https://www.powershellgallery.com/packages/MSAL.PS/) must be installed on the computer where you will be running this script. The minimum version required is 4.16.0.4.
 - The [*JWTDetails PowerShell Module*](https://www.powershellgallery.com/packages/JWTDetails/)
