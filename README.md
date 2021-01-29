@@ -28,7 +28,9 @@ Retrieve the Office 365 Service Health Data using the Office 365 Management API,
 
 ## Release Notes
 
-This is the first release.
+**v1.1**
+
+- Added logic to replace smart quotes in messages [Issue #1](https://github.com/junecastillote/MS365HealthReport/issues/1)
 
 ## Requirements
 
