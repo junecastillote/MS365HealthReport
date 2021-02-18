@@ -67,8 +67,13 @@ Function New-MS365IncidentReport {
 
         [Parameter()]
         [boolean]
-        $WriteRawJSONToDisk = $false
+        $WriteRawJSONToDisk = $false,
+
+        [Parameter()]
+        [boolean]
+        $Consolidate = $false
     )
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $ModuleInfo = Get-Module MS365HealthReport
     $Now = Get-Date
     if (!$OrganizationName) { $OrganizationName = $TenantID }
@@ -162,47 +167,58 @@ Function New-MS365IncidentReport {
     ## Get the CSS style
     $css_string = Get-Content (($ModuleInfo.ModuleBase.ToString()) + '\source\public\style.css') -Raw
 
-    ## Process each incident
-    if ($events.Count -gt 0) {
-        foreach ($event in $events) {
-            $event_id_file = "$outputDir\$($event.ID).html"
-            $event_id_json_file = "$outputDir\$($event.ID).json"
+    #Region Consolidate
+    if ($Consolidate) {
+        if ($events.Count -gt 0) {
+            $mailSubject = "[$($organizationName)] MS365 Service Health Report"
+            $event_id_file = "$outputDir\consolidated_report.html"
+            $event_id_json_file = "$outputDir\consolidated_report.json"
             $htmlBody = [System.Collections.ArrayList]@()
-            $mailSubject = '[' + $event.Status + '] ' + $event.ID + ' | ' + $event.WorkloadDisplayName + ' | ' + $event.Title
             $null = $htmlBody.Add("<html><head><title>$($mailSubject)</title>")
             $null = $htmlBody.Add('<style type="text/css">')
             $null = $htmlBody.Add($css_string)
             $null = $htmlBody.Add("</style>")
             $null = $htmlBody.Add("</head><body>")
             $null = $htmlBody.Add("<hr>")
-            $null = $htmlBody.Add('<table id="section"><tr><th>' + $event.ID + ' | ' + $event.WorkloadDisplayName + ' | ' + $event.Title + '</th></tr></table>')
+            $null = $htmlBody.Add('<table id="section"><tr><th>Service Status Summary</th></tr></table>')
             $null = $htmlBody.Add("<hr>")
             $null = $htmlBody.Add('<table id="data">')
-            $null = $htmlBody.Add('<tr><th>Status</th><td><b>' + $event.Status + '</b></td></tr>')
-            $null = $htmlBody.Add('<tr><th>Organization</th><td>' + $organizationName + '</td></tr>')
-            $null = $htmlBody.Add('<tr><th>Classification</th><td>' + $event.Classification + '</td></tr>')
-            $null = $htmlBody.Add('<tr><th>User Impact</th><td>' + $event.ImpactDescription + '</td></tr>')
-            $null = $htmlBody.Add('<tr><th>Last Updated</th><td>' + [datetime]$event.LastUpdatedTime + '</td></tr>')
-            $null = $htmlBody.Add('<tr><th>Start Time</th><td>' + [datetime]$event.StartTime + '</td></tr>')
-            $null = $htmlBody.Add('<tr><th>End Time</th><td>' + $(
-                    if ($event.EndTime) {
-                        [datetime]$event.EndTime
-                    }
-                    else {
-                        ""
-                    }
-                ) + '</td></tr>')
-
-
-            # https://4sysops.com/archives/dealing-with-smart-quotes-in-powershell/
-            $latestMessage = ($event.Messages[-1].MessageText) -replace "`n", "<br />"
-            $latestMessage = $latestMessage -replace '[\u2019\u2018]',"'"
-            $latestMessage = $latestMessage -replace '[\u201C\u201D]','"'
-
-            $null = $htmlBody.Add('<tr><th>Latest Message</th><td>' + $latestMessage + '</td></tr>')
+            $null = $htmlBody.Add("<tr><th>Workload</th><th>Event ID</th><th>Status</th><th>Title</th></tr>")
+            foreach ($event in $events) {
+                $null = $htmlBody.Add("<tr><td>$($event.WorkloadDisplayName)</td><td>$($event.ID)</td><td>$($event.Status)</td><td>$($event.Title)</td></tr>")
+            }
             $null = $htmlBody.Add('</table>')
 
-            #$null = $htmlBody.Add('<p><table id="section">')
+            foreach ($event in $events) {
+                $null = $htmlBody.Add("<hr>")
+                $null = $htmlBody.Add('<table id="section"><tr><th>' + $event.ID + ' | ' + $event.WorkloadDisplayName + ' | ' + $event.Title + '</th></tr></table>')
+                $null = $htmlBody.Add("<hr>")
+                $null = $htmlBody.Add('<table id="data">')
+                $null = $htmlBody.Add('<tr><th>Status</th><td><b>' + $event.Status + '</b></td></tr>')
+                $null = $htmlBody.Add('<tr><th>Organization</th><td>' + $organizationName + '</td></tr>')
+                $null = $htmlBody.Add('<tr><th>Classification</th><td>' + $event.Classification + '</td></tr>')
+                $null = $htmlBody.Add('<tr><th>User Impact</th><td>' + $event.ImpactDescription + '</td></tr>')
+                $null = $htmlBody.Add('<tr><th>Last Updated</th><td>' + [datetime]$event.LastUpdatedTime + '</td></tr>')
+                $null = $htmlBody.Add('<tr><th>Start Time</th><td>' + [datetime]$event.StartTime + '</td></tr>')
+                $null = $htmlBody.Add('<tr><th>End Time</th><td>' + $(
+                        if ($event.EndTime) {
+                            [datetime]$event.EndTime
+                        }
+                        else {
+                            ""
+                        }
+                    ) + '</td></tr>')
+
+
+                # https://4sysops.com/archives/dealing-with-smart-quotes-in-powershell/
+                $latestMessage = ($event.Messages[-1].MessageText) -replace "`n", "<br />"
+                $latestMessage = $latestMessage -replace '[\u2019\u2018]', "'"
+                $latestMessage = $latestMessage -replace '[\u201C\u201D]', '"'
+
+                $null = $htmlBody.Add('<tr><th>Latest Message</th><td>' + $latestMessage + '</td></tr>')
+                $null = $htmlBody.Add('</table>')
+            }
+
             $null = $htmlBody.Add('<p><font size="2" face="Segoe UI Light"><br />')
             $null = $htmlBody.Add('<br />')
             $null = $htmlBody.Add('<a href="' + $ModuleInfo.ProjectURI.ToString() + '" target="_blank">' + $ModuleInfo.Name.ToString() + ' v' + $ModuleInfo.Version.ToString() + ' </a><br>')
@@ -269,7 +285,7 @@ Function New-MS365IncidentReport {
 
                     ## Send email
                     # $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint('https://graph.microsoft.com')
-                    Write-Output "Sending Alert for $($event.id)"
+                    Write-Output "Sending Consolidated Alert for $($events.id -join ';')"
                     $null = Invoke-RestMethod -Method Post -Uri "https://graph.microsoft.com/v1.0/users/$($From)/sendmail" -Body $mailBody -Headers $GraphAPIHeader -ContentType application/json
                     # $null = $ServicePoint.CloseConnectionGroup('')
 
@@ -281,7 +297,130 @@ Function New-MS365IncidentReport {
             }
         }
     }
-    #EndRegion
+    #EndRegion Consolidate
+    #Region NoConsolidate
+    else {
+        if ($events.Count -gt 0) {
+            foreach ($event in $events) {
+                $mailSubject = "[$($organizationName)] MS365 Service Health Report | $($event.id) | $($event.WorkloadDisplayName)"
+                $event_id_file = "$outputDir\$($event.ID).html"
+                $event_id_json_file = "$outputDir\$($event.ID).json"
+                $htmlBody = [System.Collections.ArrayList]@()
+                $null = $htmlBody.Add("<html><head><title>$($mailSubject)</title>")
+                $null = $htmlBody.Add('<style type="text/css">')
+                $null = $htmlBody.Add($css_string)
+                $null = $htmlBody.Add("</style>")
+                $null = $htmlBody.Add("</head><body>")
+                $null = $htmlBody.Add("<hr>")
+                $null = $htmlBody.Add('<table id="section"><tr><th>' + $event.ID + ' | ' + $event.WorkloadDisplayName + ' | ' + $event.Title + '</th></tr></table>')
+                $null = $htmlBody.Add("<hr>")
+                $null = $htmlBody.Add('<table id="data">')
+                $null = $htmlBody.Add('<tr><th>Status</th><td><b>' + $event.Status + '</b></td></tr>')
+                $null = $htmlBody.Add('<tr><th>Organization</th><td>' + $organizationName + '</td></tr>')
+                $null = $htmlBody.Add('<tr><th>Classification</th><td>' + $event.Classification + '</td></tr>')
+                $null = $htmlBody.Add('<tr><th>User Impact</th><td>' + $event.ImpactDescription + '</td></tr>')
+                $null = $htmlBody.Add('<tr><th>Last Updated</th><td>' + [datetime]$event.LastUpdatedTime + '</td></tr>')
+                $null = $htmlBody.Add('<tr><th>Start Time</th><td>' + [datetime]$event.StartTime + '</td></tr>')
+                $null = $htmlBody.Add('<tr><th>End Time</th><td>' + $(
+                        if ($event.EndTime) {
+                            [datetime]$event.EndTime
+                        }
+                        else {
+                            ""
+                        }
+                    ) + '</td></tr>')
+
+
+                # https://4sysops.com/archives/dealing-with-smart-quotes-in-powershell/
+                $latestMessage = ($event.Messages[-1].MessageText) -replace "`n", "<br />"
+                $latestMessage = $latestMessage -replace '[\u2019\u2018]', "'"
+                $latestMessage = $latestMessage -replace '[\u201C\u201D]', '"'
+
+                $null = $htmlBody.Add('<tr><th>Latest Message</th><td>' + $latestMessage + '</td></tr>')
+                $null = $htmlBody.Add('</table>')
+
+                $null = $htmlBody.Add('<p><font size="2" face="Segoe UI Light"><br />')
+                $null = $htmlBody.Add('<br />')
+                $null = $htmlBody.Add('<a href="' + $ModuleInfo.ProjectURI.ToString() + '" target="_blank">' + $ModuleInfo.Name.ToString() + ' v' + $ModuleInfo.Version.ToString() + ' </a><br>')
+                $null = $htmlBody.Add('</body>')
+                $null = $htmlBody.Add('</html>')
+                $htmlBody = $htmlBody -join "`n" #convert to multiline string
+
+                if ($WriteReportToDisk -eq $true) {
+                    $htmlBody | Out-File $event_id_file -Force
+                }
+
+                if ($SendEmail -eq $true) {
+
+                    # Recipients
+                    $toAddressJSON = @()
+                    $To | ForEach-Object {
+                        $toAddressJSON += @{EmailAddress = @{Address = $_ } }
+                    }
+
+                    try {
+                        #message
+                        $mailBody = @{
+                            message = @{
+                                subject                = $mailSubject
+                                body                   = @{
+                                    contentType = "HTML"
+                                    content     = $htmlBody
+                                }
+                                toRecipients           = @(
+                                    $ToAddressJSON
+                                )
+                                internetMessageHeaders = @(
+                                    @{
+                                        name  = "X-Mailer"
+                                        value = "MS365HealthReport (junecastillote)"
+                                    }
+                                )
+                            }
+                        }
+
+                        ## Add CC recipients if specified
+                        if ($Cc) {
+                            $ccAddressJSON = @()
+                            $Cc | ForEach-Object {
+                                $ccAddressJSON += @{EmailAddress = @{Address = $_ } }
+                            }
+                            $mailBody.Message += @{ccRecipients = $ccAddressJSON }
+                        }
+
+                        ## Add BCC recipients if specified
+                        if ($Bcc) {
+                            $BccAddressJSON = @()
+                            $Bcc | ForEach-Object {
+                                $BccAddressJSON += @{EmailAddress = @{Address = $_ } }
+                            }
+                            $mailBody.Message += @{BccRecipients = $BccAddressJSON }
+                        }
+
+                        $mailBody = $($mailBody | ConvertTo-Json -Depth 4)
+
+                        if ($WriteRawJSONToDisk) {
+                            $mailBody | Out-File $event_id_json_file -Force
+                        }
+
+                        ## Send email
+                        # $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint('https://graph.microsoft.com')
+                        Write-Output "Sending Alert for $($event.id)"
+                        $null = Invoke-RestMethod -Method Post -Uri "https://graph.microsoft.com/v1.0/users/$($From)/sendmail" -Body $mailBody -Headers $GraphAPIHeader -ContentType application/json
+                        # $null = $ServicePoint.CloseConnectionGroup('')
+
+                    }
+                    catch {
+                        Write-Output "Failed to send Alert for $($event.id) | $($_.Exception.Message)"
+                        return $null
+                    }
+                }
+            }
+        }
+    }
+    #EndRegion NoConsolidate
+
+    #EndRegion Create Report
 
     if ($StartFromLastRun) {
         Write-Output "Setting last run time in the registry to $Now"
