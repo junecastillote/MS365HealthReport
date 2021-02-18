@@ -20,6 +20,6 @@ $reportSplat = @{
     # StartFromLastRun = $true
     LastUpdatedTime = (Get-Date).AddDays(-10)
     # Verbose = $true
-    # Consolidate = $true
+    # Consolidate = $false
 }
 New-MS365IncidentReport @reportSplat

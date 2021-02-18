@@ -71,7 +71,7 @@ Function New-MS365IncidentReport {
 
         [Parameter()]
         [boolean]
-        $Consolidate = $false
+        $Consolidate = $true
     )
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $ModuleInfo = Get-Module MS365HealthReport

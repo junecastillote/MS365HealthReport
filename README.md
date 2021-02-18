@@ -164,7 +164,7 @@ New-MS365IncidentReport
 | `Cc`                          | This is the CC recipient addresses. This is optional.                                                                                                                                                                                                                                                       |
 | `Bcc`                         | This is the CC recipient addresses. This is optional.                                                                                                                                                                                                                                                       |
 | `WriteReportToDisk`           | By default, the reports are saved to disk. If you don't want to save to disk, or if you're running this in Azure Automation, you can set this parameter to `$false`                                                                                                                                         |
-| `Consolidate`                 | Boolean parameter. If set to $true, the alerts are consolidated and sent in one email. If set to $false (default), each alert is sent separately.                                                                                                                                                           |
+| `Consolidate`                 | Boolean parameter. If set to `$true` (default), the alerts are consolidated and sent in one email. If set to `$false`, each alert is sent separately.                                                                                                                                                           |
 
 ## Usage Examples
 
@@ -195,6 +195,8 @@ New-MS365IncidentReport @reportSplat
 
 This example gets the last run time from the registry `HKCU:\CurrentUser\Software\MS365HealthReport\<TenantID>` and only return the updates after that time.
 
+Each alert is sent separately because the `Consolidate` parameter is set to `$false`.
+
 ```PowerShell
 $AppID = ''
 $TenantID = '<org>.onmicrosoft.com'
@@ -210,6 +212,7 @@ $reportSplat = @{
     To = @('to@domain.com')
     StartFromLastRun = $true
     Workload = @('Exchange','Sharepoint')
+    Consolidate = $false
 }
 
 New-MS365IncidentReport @reportSplat
