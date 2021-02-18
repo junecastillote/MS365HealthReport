@@ -170,7 +170,7 @@ Function New-MS365IncidentReport {
     #Region Consolidate
     if ($Consolidate) {
         if ($events.Count -gt 0) {
-            $mailSubject = "[$($organizationName)] MS365 Service Health Report"
+            $mailSubject = "[$($organizationName)] MS365 Service Health Report"            
             $event_id_file = "$outputDir\consolidated_report.html"
             $event_id_json_file = "$outputDir\consolidated_report.json"
             $htmlBody = [System.Collections.ArrayList]@()
@@ -180,7 +180,7 @@ Function New-MS365IncidentReport {
             $null = $htmlBody.Add("</style>")
             $null = $htmlBody.Add("</head><body>")
             $null = $htmlBody.Add("<hr>")
-            $null = $htmlBody.Add('<table id="section"><tr><th>Service Status Summary</th></tr></table>')
+            $null = $htmlBody.Add('<table id="section"><tr><th>MS365 Service Status Summary</th></tr></table>')
             $null = $htmlBody.Add("<hr>")
             $null = $htmlBody.Add('<table id="data">')
             $null = $htmlBody.Add("<tr><th>Workload</th><th>Event ID</th><th>Status</th><th>Title</th></tr>")
