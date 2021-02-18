@@ -4,6 +4,9 @@ $ClientSecret = ''
 # $thumbprint = ''
 # $certificate = get-item -path "Cert:\currentuser\my\$thumbprint"
 
+Remove-Module MS365HealthReport -ErrorAction SilentlyContinue
+Import-Module MS365HealthReport
+
 $reportSplat = @{
     OrganizationName = 'Organization Name Here'
     ClientID = $AppID
