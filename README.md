@@ -28,6 +28,11 @@ Retrieve the Office 365 Service Health Data using the Office 365 Management API,
 
 ## Release Notes
 
+**V1.4.1**
+
+- Add "Classification" column to summary.
+- Add On-page anchor links in summary.
+
 **V1.4**
 
 - Add `-Consolidate` parameter (boolean) to consolidate reports in one email.
