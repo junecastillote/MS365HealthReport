@@ -24,7 +24,9 @@
 
 Retrieve the Office 365 Service Health Data using the Office 365 Management API, and send the email report using Microsoft Graph API.
 
-![Example Incident Message](docs/images/image01.png)
+![Example Incident Summary](docs/images/consolidated_report.png)
+
+![Example Incident Alert](docs/images/individual_report.png)
 
 ## Release Notes
 
