@@ -170,7 +170,7 @@ Function New-MS365IncidentReport {
     #Region Consolidate
     if ($Consolidate) {
         if ($events.Count -gt 0) {
-            $mailSubject = "[$($organizationName)] MS365 Service Health Report"            
+            $mailSubject = "[$($organizationName)] MS365 Service Incident Report"
             $event_id_file = "$outputDir\consolidated_report.html"
             $event_id_json_file = "$outputDir\consolidated_report.json"
             $htmlBody = [System.Collections.ArrayList]@()
@@ -180,18 +180,22 @@ Function New-MS365IncidentReport {
             $null = $htmlBody.Add("</style>")
             $null = $htmlBody.Add("</head><body>")
             $null = $htmlBody.Add("<hr>")
-            $null = $htmlBody.Add('<table id="section"><tr><th>MS365 Service Status Summary</th></tr></table>')
+            $null = $htmlBody.Add('<table id="section"><tr><th><a name="summary">MS365 Service Status Summary</a></th></tr></table>')
             $null = $htmlBody.Add("<hr>")
             $null = $htmlBody.Add('<table id="data">')
-            $null = $htmlBody.Add("<tr><th>Workload</th><th>Event ID</th><th>Status</th><th>Title</th></tr>")
-            foreach ($event in $events) {
-                $null = $htmlBody.Add("<tr><td>$($event.WorkloadDisplayName)</td><td>$($event.ID)</td><td>$($event.Status)</td><td>$($event.Title)</td></tr>")
+            $null = $htmlBody.Add("<tr><th>Workload</th><th>Event ID</th><th>Classification</th><th>Status</th><th>Title</th></tr>")
+            foreach ($event in ($events | Sort-Object Classification -Descending)) {
+                $null = $htmlBody.Add("<tr><td>$($event.WorkloadDisplayName)</td>
+                <td>" + '<a href="#' + $($event.ID) + '">' + "$($event.ID)</a></td>
+                <td>$($event.Classification)</td>
+                <td>$($event.Status)</td>
+                <td>$($event.Title)</td></tr>")
             }
             $null = $htmlBody.Add('</table>')
 
-            foreach ($event in $events) {
+            foreach ($event in $events | Sort-Object Classification -Descending) {
                 $null = $htmlBody.Add("<hr>")
-                $null = $htmlBody.Add('<table id="section"><tr><th>' + $event.ID + ' | ' + $event.WorkloadDisplayName + ' | ' + $event.Title + '</th></tr></table>')
+                $null = $htmlBody.Add('<table id="section"><tr><th><a name="' + $event.ID + '">' + $event.ID + '</a> | ' + $event.WorkloadDisplayName + ' | ' + $event.Title + '</th></tr></table>')
                 $null = $htmlBody.Add("<hr>")
                 $null = $htmlBody.Add('<table id="data">')
                 $null = $htmlBody.Add('<tr><th>Status</th><td><b>' + $event.Status + '</b></td></tr>')
@@ -217,11 +221,12 @@ Function New-MS365IncidentReport {
 
                 $null = $htmlBody.Add('<tr><th>Latest Message</th><td>' + $latestMessage + '</td></tr>')
                 $null = $htmlBody.Add('</table>')
+                $null = $htmlBody.Add('<div style="font-family: Tahoma;font-size: 10px"><a href = "#summary">(back to summary)</a></div>')
             }
 
             $null = $htmlBody.Add('<p><font size="2" face="Segoe UI Light"><br />')
             $null = $htmlBody.Add('<br />')
-            $null = $htmlBody.Add('<a href="' + $ModuleInfo.ProjectURI.ToString() + '" target="_blank">' + $ModuleInfo.Name.ToString() + ' v' + $ModuleInfo.Version.ToString() + ' </a><br>')
+            $null = $htmlBody.Add('<a href="' + $ModuleInfo.ProjectURI.ToString() + '" target="_blank">' + $ModuleInfo.Name.ToString() + ' v' + $ModuleInfo.Version.ToString() + ' </a><br></p>')
             $null = $htmlBody.Add('</body>')
             $null = $htmlBody.Add('</html>')
             $htmlBody = $htmlBody -join "`n" #convert to multiline string
@@ -301,7 +306,7 @@ Function New-MS365IncidentReport {
     #Region NoConsolidate
     else {
         if ($events.Count -gt 0) {
-            foreach ($event in $events) {
+            foreach ($event in ($events | Sort-Object Classification -Descending) ) {
                 $mailSubject = "[$($organizationName)] MS365 Service Health Report | $($event.id) | $($event.WorkloadDisplayName)"
                 $event_id_file = "$outputDir\$($event.ID).html"
                 $event_id_json_file = "$outputDir\$($event.ID).json"
@@ -341,7 +346,7 @@ Function New-MS365IncidentReport {
 
                 $null = $htmlBody.Add('<p><font size="2" face="Segoe UI Light"><br />')
                 $null = $htmlBody.Add('<br />')
-                $null = $htmlBody.Add('<a href="' + $ModuleInfo.ProjectURI.ToString() + '" target="_blank">' + $ModuleInfo.Name.ToString() + ' v' + $ModuleInfo.Version.ToString() + ' </a><br>')
+                $null = $htmlBody.Add('<a href="' + $ModuleInfo.ProjectURI.ToString() + '" target="_blank">' + $ModuleInfo.Name.ToString() + ' v' + $ModuleInfo.Version.ToString() + ' </a><br></p>')
                 $null = $htmlBody.Add('</body>')
                 $null = $htmlBody.Add('</html>')
                 $htmlBody = $htmlBody -join "`n" #convert to multiline string
