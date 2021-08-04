@@ -37,7 +37,7 @@ Function Get-MS365HealthReportLastRunTime {
 
     try {
         $value = Get-ItemPropertyValue -Path $RegPath -Name "(default)" -ErrorAction Stop
-        return $value
+        return $(Get-Date $value)
     }
     catch {
         Set-MS365HealthReportLastRunTime -TenantID $TenantID -LastRunTime $now
