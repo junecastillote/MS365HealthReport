@@ -124,7 +124,7 @@ Function New-MS365IncidentReport {
     ## If -StartFromLastRun, this function will only get the incidents whose LastUpdatedTime is after the timestamp in "HKCU:\Software\MS365HealthReport\$TenantID"
     if ($StartFromLastRun) {
         Write-Output "Getting last run time from the registry."
-        $LastUpdatedTime = Get-MS365HealthReportLastRunTime -TenantID $TenantID
+        [datetime]$LastUpdatedTime = Get-MS365HealthReportLastRunTime -TenantID $TenantID
     }
 
     ## If -LastUpdatedTime, this function will only get the incidents whose LastUpdatedTime is after the $LastUpdatedTime datetime value.
