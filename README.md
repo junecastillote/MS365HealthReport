@@ -30,6 +30,10 @@ Retrieve the Office 365 Service Health Data using the Office 365 Management API,
 
 ## Release Notes
 
+**V1.4.2**
+
+- Fixed error in reading the last run timestamp from the registry.
+
 **V1.4.1**
 
 - Add "Classification" column to summary.
