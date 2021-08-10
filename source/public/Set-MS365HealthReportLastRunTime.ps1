@@ -24,23 +24,3 @@ Function Set-MS365HealthReportLastRunTime {
     }
     $null = New-Item @regSplat -Force
 }
-
-Function Get-MS365HealthReportLastRunTime {
-    [CmdletBinding()]
-    param (
-        [parameter(Mandatory)]
-        [ValidateNotNullOrEmpty()]
-        [string]$TenantID
-    )
-    $now = Get-Date
-    $RegPath = "HKCU:\Software\MS365HealthReport\$TenantID"
-
-    try {
-        $value = Get-ItemPropertyValue -Path $RegPath -Name "(default)" -ErrorAction Stop
-        return $value
-    }
-    catch {
-        Set-MS365HealthReportLastRunTime -TenantID $TenantID -LastRunTime $now
-        return $now
-    }
-}
