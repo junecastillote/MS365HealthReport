@@ -20,6 +20,7 @@ $reportSplat = @{
     # CC = @()
     # BCC = @()
     # Workload = @('SharePoint','Exchange')
+    Status = 'Ongoing'
     # StartFromLastRun = $true
     LastUpdatedTime = (Get-Date).AddDays(-10)
     # Verbose = $true

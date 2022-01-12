@@ -41,6 +41,10 @@ Function New-MS365IncidentReport {
         [string[]]
         $Workload,
 
+        [parameter()]
+        [ValidateSet('Ongoing', 'Resolved')]
+        [string]$Status,
+
         [Parameter()]
         [switch]
         $SendEmail,
@@ -74,75 +78,66 @@ Function New-MS365IncidentReport {
         $Consolidate = $true
     )
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-    $ModuleInfo = Get-Module MS365HealthReport
+    $ModuleInfo = Get-Module $($MyInvocation.MyCommand.ModuleName)
     $Now = Get-Date
     if (!$OrganizationName) { $OrganizationName = $TenantID }
 
-    Write-Output "Authentication type: $($pscmdlet.ParameterSetName)"
-    Write-Output "Client ID: $ClientID"
-    Write-Output "Tenant ID: $TenantID"
+    SayInfo "Authentication type: $($pscmdlet.ParameterSetName)"
+    SayInfo "Client ID: $ClientID"
+    SayInfo "Tenant ID: $TenantID"
 
     # Get Service Communications API Token
     if ($pscmdlet.ParameterSetName -eq 'Client Secret') {
         $SecureClientSecret = New-Object System.Security.SecureString
         $ClientSecret.toCharArray() | ForEach-Object { $SecureClientSecret.AppendChar($_) }
-        $ServiceCommsApiOAuth2 = Get-MsalToken -ClientId $ClientID -ClientSecret $SecureClientSecret -TenantId $tenantID -Scopes 'https://manage.office.com/.default' -ErrorAction Stop
+        $OAuth = Get-MsalToken -ClientId $ClientID -ClientSecret $SecureClientSecret -TenantId $tenantID -ErrorAction Stop
     }
     elseif ($pscmdlet.ParameterSetName -eq 'Client Certificate') {
-        $ServiceCommsApiOAuth2 = Get-MsalToken -ClientId $ClientID -ClientCertificate $ClientCertificate -TenantId $tenantID -Scopes 'https://manage.office.com/.default' -ErrorAction Stop
+        $OAuth = Get-MsalToken -ClientId $ClientID -ClientCertificate $ClientCertificate -TenantId $tenantID -ErrorAction Stop
     }
     elseif ($pscmdlet.ParameterSetName -eq 'Certificate Thumbprint') {
-        $ServiceCommsApiOAuth2 = Get-MsalToken -ClientId $ClientID -ClientCertificate (Get-Item Cert:\CurrentUser\My\$($ClientCertificateThumbprint)) -TenantId $tenantID -Scopes 'https://manage.office.com/.default' -ErrorAction Stop
+        $OAuth = Get-MsalToken -ClientId $ClientID -ClientCertificate (Get-Item Cert:\CurrentUser\My\$($ClientCertificateThumbprint)) -TenantId $tenantID -ErrorAction Stop
     }
+
+    $GraphAPIHeader = @{'Authorization' = "Bearer $($OAuth.AccessToken)" }
 
     # Get GraphAPI Token
     if ($SendEmail) {
-
-        if (!$From) { Write-Warning "You ask me to send an email report but you forgot to add the -From address."; return $null }
-        if (!$To) { Write-Warning "You ask me to send an email report but you forgot to add the -To address(es)."; return $null }
-
-        if ($pscmdlet.ParameterSetName -eq 'Client Secret') {
-            $SecureClientSecret = New-Object System.Security.SecureString
-            $ClientSecret.toCharArray() | ForEach-Object { $SecureClientSecret.AppendChar($_) }
-            $GraphApiOAuth2 = Get-MsalToken -ClientId $ClientID -ClientSecret $SecureClientSecret -TenantId $tenantID -Scopes @('https://graph.microsoft.com/.default') -ErrorAction Stop
-        }
-        elseif ($pscmdlet.ParameterSetName -eq 'Client Certificate') {
-            $GraphApiOAuth2 = Get-MsalToken -ClientId $ClientID -ClientCertificate $ClientCertificate -TenantId $tenantID -Scopes @('https://graph.microsoft.com/.default') -ErrorAction Stop
-        }
-        elseif ($pscmdlet.ParameterSetName -eq 'Certificate Thumbprint') {
-            $GraphApiOAuth2 = Get-MsalToken -ClientId $ClientID -ClientCertificate (Get-Item Cert:\CurrentUser\My\$($ClientCertificateThumbprint)) -TenantId $tenantID -Scopes @('https://graph.microsoft.com/.default') -ErrorAction Stop
-        }
-        $GraphAPIHeader = @{'Authorization' = "Bearer $($GraphApiOAuth2.AccessToken)" }
+        if (!$From) { SayWarning "You ask me to send an email report but you forgot to add the -From address."; return $null }
+        if (!$To) { SayWarning "You ask me to send an email report but you forgot to add the -To address(es)."; return $null }
     }
 
     #Region Get Incidents
     $searchParam = @{
-        Token       = ($ServiceCommsApiOAuth2.AccessToken);
-        MessageType = 'Incident';
+        Token = ($OAuth.AccessToken);
+    }
+
+    if ($Status) {
+        $searchParam += (@{Status = $Status })
     }
 
     ## If -StartFromLastRun, this function will only get the incidents whose LastUpdatedTime is after the timestamp in "HKCU:\Software\MS365HealthReport\$TenantID"
     if ($StartFromLastRun) {
-        Write-Output "Getting last run time from the registry."
+        SayInfo "Getting last run time from the registry."
         [datetime]$LastUpdatedTime = Get-MS365HealthReportLastRunTime -TenantID $TenantID
     }
 
     ## If -LastUpdatedTime, this function will only get the incidents whose LastUpdatedTime is after the $LastUpdatedTime datetime value.
     if ($LastUpdatedTime) {
         $searchParam += (@{LastUpdatedTime = $LastUpdatedTime })
-        Write-Output "Getting incident reports from: $LastUpdatedTime"
+        SayInfo "Getting incident reports from: $LastUpdatedTime"
     }
 
     if ($Workload) {
         $searchParam += (@{Workload = $Workload })
-        Write-Output "Workload: $($Workload -join ',')"
+        SayInfo "Workload: $($Workload -join ',')"
     }
     try {
         $events = @(Get-MS365Messages @searchParam -ErrorAction STOP)
-        Write-Output "Total Incidents Retrieved: $($events.Count)"
+        SayInfo "Total Incidents Retrieved: $($events.Count)"
     }
     catch {
-        Write-Output "Failed to get data. $($_.Exception.Message)"
+        SayError "Failed to get data. $($_.Exception.Message)"
         return $null
     }
 
@@ -150,14 +145,14 @@ Function New-MS365IncidentReport {
 
     #Region Prepare Output Directory
     if ($WriteReportToDisk -eq $true) {
-        $outputDir = "$($env:TMP)\$($ModuleInfo.Name)\$($TenantID)"
+        $outputDir = "$($env:USERPROFILE)\$($ModuleInfo.Name)\$($TenantID)"
         if (!(Test-Path -Path $outputDir)) {
             $null = New-Item -ItemType Directory -Path $outputDir -Force
         }
         else {
             Remove-Item -Path $outputDir\* -Recurse -Force -Confirm:$false
         }
-        Write-Output "Output Directory: $outputDir"
+        SayInfo "Output Directory: $outputDir"
     }
 
     #EndRegion
@@ -170,7 +165,7 @@ Function New-MS365IncidentReport {
     #Region Consolidate
     if ($Consolidate) {
         if ($events.Count -gt 0) {
-            $mailSubject = "[$($organizationName)] MS365 Service Incident Report"
+            $mailSubject = "[$($organizationName)] Microsoft 365 Service Health Report"
             $event_id_file = "$outputDir\consolidated_report.html"
             $event_id_json_file = "$outputDir\consolidated_report.json"
             $htmlBody = [System.Collections.ArrayList]@()
@@ -180,12 +175,12 @@ Function New-MS365IncidentReport {
             $null = $htmlBody.Add("</style>")
             $null = $htmlBody.Add("</head><body>")
             $null = $htmlBody.Add("<hr>")
-            $null = $htmlBody.Add('<table id="section"><tr><th><a name="summary">MS365 Service Status Summary</a></th></tr></table>')
+            $null = $htmlBody.Add('<table id="section"><tr><th><a name="summary">Summary</a></th></tr></table>')
             $null = $htmlBody.Add("<hr>")
             $null = $htmlBody.Add('<table id="data">')
             $null = $htmlBody.Add("<tr><th>Workload</th><th>Event ID</th><th>Classification</th><th>Status</th><th>Title</th></tr>")
             foreach ($event in ($events | Sort-Object Classification -Descending)) {
-                $null = $htmlBody.Add("<tr><td>$($event.WorkloadDisplayName)</td>
+                $null = $htmlBody.Add("<tr><td>$($event.Service)</td>
                 <td>" + '<a href="#' + $($event.ID) + '">' + "$($event.ID)</a></td>
                 <td>$($event.Classification)</td>
                 <td>$($event.Status)</td>
@@ -195,18 +190,18 @@ Function New-MS365IncidentReport {
 
             foreach ($event in $events | Sort-Object Classification -Descending) {
                 $null = $htmlBody.Add("<hr>")
-                $null = $htmlBody.Add('<table id="section"><tr><th><a name="' + $event.ID + '">' + $event.ID + '</a> | ' + $event.WorkloadDisplayName + ' | ' + $event.Title + '</th></tr></table>')
+                $null = $htmlBody.Add('<table id="section"><tr><th><a name="' + $event.ID + '">' + $event.ID + '</a> | ' + $event.Service + ' | ' + $event.Title + '</th></tr></table>')
                 $null = $htmlBody.Add("<hr>")
                 $null = $htmlBody.Add('<table id="data">')
                 $null = $htmlBody.Add('<tr><th>Status</th><td><b>' + $event.Status + '</b></td></tr>')
                 $null = $htmlBody.Add('<tr><th>Organization</th><td>' + $organizationName + '</td></tr>')
                 $null = $htmlBody.Add('<tr><th>Classification</th><td>' + $event.Classification + '</td></tr>')
                 $null = $htmlBody.Add('<tr><th>User Impact</th><td>' + $event.ImpactDescription + '</td></tr>')
-                $null = $htmlBody.Add('<tr><th>Last Updated</th><td>' + [datetime]$event.LastUpdatedTime + '</td></tr>')
-                $null = $htmlBody.Add('<tr><th>Start Time</th><td>' + [datetime]$event.StartTime + '</td></tr>')
+                $null = $htmlBody.Add('<tr><th>Last Updated</th><td>' + "{0:yyyy-MM-dd H:mm}" -f [datetime]$event.lastModifiedDateTime + '</td></tr>')
+                $null = $htmlBody.Add('<tr><th>Start Time</th><td>' + "{0:yyyy-MM-dd H:mm}" -f [datetime]$event.startDateTime + '</td></tr>')
                 $null = $htmlBody.Add('<tr><th>End Time</th><td>' + $(
-                        if ($event.EndTime) {
-                            [datetime]$event.EndTime
+                        if ($event.endDateTime) {
+                            "{0:yyyy-MM-dd H:mm}" -f [datetime]$event.endDateTime
                         }
                         else {
                             ""
@@ -215,7 +210,7 @@ Function New-MS365IncidentReport {
 
 
                 # https://4sysops.com/archives/dealing-with-smart-quotes-in-powershell/
-                $latestMessage = ($event.Messages[-1].MessageText) -replace "`n", "<br />"
+                $latestMessage = ($event.posts[-1].description.content) -replace "`n", "<br />"
                 $latestMessage = $latestMessage -replace '[\u2019\u2018]', "'"
                 $latestMessage = $latestMessage -replace '[\u201C\u201D]', '"'
 
@@ -290,13 +285,13 @@ Function New-MS365IncidentReport {
 
                     ## Send email
                     # $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint('https://graph.microsoft.com')
-                    Write-Output "Sending Consolidated Alert for $($events.id -join ';')"
-                    $null = Invoke-RestMethod -Method Post -Uri "https://graph.microsoft.com/v1.0/users/$($From)/sendmail" -Body $mailBody -Headers $GraphAPIHeader -ContentType application/json
+                    SayInfo "Sending Consolidated Alert for $($events.id -join ';')"
+                    $null = Invoke-RestMethod -Method Post -Uri "https://graph.microsoft.com/beta/users/$($From)/sendmail" -Body $mailBody -Headers $GraphAPIHeader -ContentType application/json
                     # $null = $ServicePoint.CloseConnectionGroup('')
 
                 }
                 catch {
-                    Write-Output "Failed to send Alert for $($event.id) | $($_.Exception.Message)"
+                    SayInfo "Failed to send Alert for $($event.id) | $($_.Exception.Message)"
                     return $null
                 }
             }
@@ -307,7 +302,7 @@ Function New-MS365IncidentReport {
     else {
         if ($events.Count -gt 0) {
             foreach ($event in ($events | Sort-Object Classification -Descending) ) {
-                $mailSubject = "[$($organizationName)] MS365 Service Health Report | $($event.id) | $($event.WorkloadDisplayName)"
+                $mailSubject = "[$($organizationName)] MS365 Service Health Report | $($event.id) | $($event.Service)"
                 $event_id_file = "$outputDir\$($event.ID).html"
                 $event_id_json_file = "$outputDir\$($event.ID).json"
                 $htmlBody = [System.Collections.ArrayList]@()
@@ -317,18 +312,18 @@ Function New-MS365IncidentReport {
                 $null = $htmlBody.Add("</style>")
                 $null = $htmlBody.Add("</head><body>")
                 $null = $htmlBody.Add("<hr>")
-                $null = $htmlBody.Add('<table id="section"><tr><th>' + $event.ID + ' | ' + $event.WorkloadDisplayName + ' | ' + $event.Title + '</th></tr></table>')
+                $null = $htmlBody.Add('<table id="section"><tr><th>' + $event.ID + ' | ' + $event.Service + ' | ' + $event.Title + '</th></tr></table>')
                 $null = $htmlBody.Add("<hr>")
                 $null = $htmlBody.Add('<table id="data">')
                 $null = $htmlBody.Add('<tr><th>Status</th><td><b>' + $event.Status + '</b></td></tr>')
                 $null = $htmlBody.Add('<tr><th>Organization</th><td>' + $organizationName + '</td></tr>')
                 $null = $htmlBody.Add('<tr><th>Classification</th><td>' + $event.Classification + '</td></tr>')
                 $null = $htmlBody.Add('<tr><th>User Impact</th><td>' + $event.ImpactDescription + '</td></tr>')
-                $null = $htmlBody.Add('<tr><th>Last Updated</th><td>' + [datetime]$event.LastUpdatedTime + '</td></tr>')
-                $null = $htmlBody.Add('<tr><th>Start Time</th><td>' + [datetime]$event.StartTime + '</td></tr>')
+                $null = $htmlBody.Add('<tr><th>Last Updated</th><td>' + [datetime]$event.lastModifiedDateTime + '</td></tr>')
+                $null = $htmlBody.Add('<tr><th>Start Time</th><td>' + [datetime]$event.startDateTime + '</td></tr>')
                 $null = $htmlBody.Add('<tr><th>End Time</th><td>' + $(
-                        if ($event.EndTime) {
-                            [datetime]$event.EndTime
+                        if ($event.endDateTime) {
+                            [datetime]$event.endDateTime
                         }
                         else {
                             ""
@@ -337,7 +332,7 @@ Function New-MS365IncidentReport {
 
 
                 # https://4sysops.com/archives/dealing-with-smart-quotes-in-powershell/
-                $latestMessage = ($event.Messages[-1].MessageText) -replace "`n", "<br />"
+                $latestMessage = ($event.posts[-1].description.content) -replace "`n", "<br />"
                 $latestMessage = $latestMessage -replace '[\u2019\u2018]', "'"
                 $latestMessage = $latestMessage -replace '[\u201C\u201D]', '"'
 
@@ -410,13 +405,13 @@ Function New-MS365IncidentReport {
 
                         ## Send email
                         # $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint('https://graph.microsoft.com')
-                        Write-Output "Sending Alert for $($event.id)"
+                        SayInfo "Sending Alert for $($event.id)"
                         $null = Invoke-RestMethod -Method Post -Uri "https://graph.microsoft.com/v1.0/users/$($From)/sendmail" -Body $mailBody -Headers $GraphAPIHeader -ContentType application/json
                         # $null = $ServicePoint.CloseConnectionGroup('')
 
                     }
                     catch {
-                        Write-Output "Failed to send Alert for $($event.id) | $($_.Exception.Message)"
+                        SayInfo "Failed to send Alert for $($event.id) | $($_.Exception.Message)"
                         return $null
                     }
                 }
@@ -427,8 +422,8 @@ Function New-MS365IncidentReport {
 
     #EndRegion Create Report
 
-    if ($StartFromLastRun) {
-        Write-Output "Setting last run time in the registry to $Now"
+    # if ($StartFromLastRun) {
+        SayInfo "Setting last run time in the registry to $Now"
         Set-MS365HealthReportLastRunTime -TenantID $tenantID -LastRunTime $Now
-    }
+    # }
 }
