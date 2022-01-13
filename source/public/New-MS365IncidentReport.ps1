@@ -91,6 +91,7 @@ Function New-MS365IncidentReport {
         $SecureClientSecret = New-Object System.Security.SecureString
         $ClientSecret.toCharArray() | ForEach-Object { $SecureClientSecret.AppendChar($_) }
         $OAuth = Get-MsalToken -ClientId $ClientID -ClientSecret $SecureClientSecret -TenantId $tenantID -ErrorAction Stop
+        Sayinfo $($ClientSecret -replace $($ClientSecret.Substring(0,$ClientSecret.Length -8)),$('X'*$($ClientSecret.Substring(0,$ClientSecret.Length -8)).Length))
     }
     elseif ($pscmdlet.ParameterSetName -eq 'Client Certificate') {
         $OAuth = Get-MsalToken -ClientId $ClientID -ClientCertificate $ClientCertificate -TenantId $tenantID -ErrorAction Stop

@@ -19,11 +19,6 @@ Function Get-MS365Messages {
         [string]$Status
     )
 
-    # if ($LastUpdatedTime) {
-    #     $LastUpdatedTime = Get-Date ($LastUpdatedTime.ToUniversalTime()) -UFormat "%Y-%m-%YT%RZ"
-    # }
-    # $ServicePoint = [System.Net.ServicePointManager]::FindServicePoint('https://manage.office.com')
-    # $tenantID = ($token | Get-JWTDetails).tid
     $header = @{'Authorization' = "Bearer $($Token)" }
     # $uri = "https://manage.office.com/api/v1.0/$($tenantID)/ServiceComms/Messages"
     $uri = "https://graph.microsoft.com/beta/admin/serviceAnnouncement/issues"
