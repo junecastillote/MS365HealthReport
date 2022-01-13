@@ -24,7 +24,7 @@
 
 Retrieve the Microsoft 365 Service Health status and send the email report using Microsoft Graph API.
 
-> *Important: As of December 17, 2021, Microsoft have deprecated the **Office 365 Service Communications API** which caused the previous version of this module (v1.4.2) to stop working. This new version now uses only Microsoft Graph API. Please refer to the new set of required API permissions in the [Requirements](#requirements) section.*
+> *Important: As of December 17, 2021, Microsoft has deprecated the **Office 365 Service Communications API**, which caused the previous version of this module (v1.4.2) to stop working. This new version now uses only Microsoft Graph API. Please refer to the new set of required API permissions in the [Requirements](#requirements) section.*
 
 ![Example Incident Summary](docs/images/consolidated_report.png)
 
