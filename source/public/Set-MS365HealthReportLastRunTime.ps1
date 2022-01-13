@@ -15,7 +15,7 @@ Function Set-MS365HealthReportLastRunTime {
         Path  = $RegPath
         Value = $(
             if ($LastRunTime) {
-                $LastRunTime
+                "{0:yyyy-MM-dd H:mm}" -f $LastRunTime
             }
             else {
                 $now

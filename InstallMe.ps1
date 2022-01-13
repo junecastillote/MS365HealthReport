@@ -14,24 +14,24 @@ if (!$ModulePath) {
     do {
         Clear-Host
         # Display selection menu
-        Write-Output "====== Module Install Location ======"
-        Write-Output ""
+        Say "====== Module Install Location ======"
+        Say ""
         $i = 1
         $paths | ForEach-Object {
-            Write-Output "$($i): $_"
+            Say "$($i): $_"
             $i = $i + 1
         }
-        Write-Output "Q: QUIT"
-        Write-Output ""
+        Say "Q: QUIT"
+        Say ""
         # AS for input
         $userInput = Read-Host "Select the installation path"
     }
     until ($userInput -eq 'Q' -or ($userInput -lt ($paths.count + 1) -and $userInput -gt 0))
 
     if ($userInput -eq 'Q') {
-        Write-Output ""
-        Write-Output "QUIT"
-        Write-Output ""
+        Say ""
+        Say "QUIT"
+        Say ""
         return $null
     }
     $ModulePath = $paths[($userInput - 1)]
@@ -45,16 +45,16 @@ if (!(Test-Path $ModulePath)) {
 try {
     Copy-Item -Path $PSScriptRoot\* -Include *.psd1, *.psm1 -Destination $ModulePath -Force -Confirm:$false -ErrorAction Stop
     Copy-Item -Path $PSScriptRoot\source -recurse -Destination $ModulePath -Force -Confirm:$false -ErrorAction Stop
-    Write-Output ""
-    Write-Output "Success. Installed to $ModulePath"
-    Write-Output ""
+    Say ""
+    Say "Success. Installed to $ModulePath"
+    Say ""
     #Import-Module ExCmdReport
     Get-ChildItem -Recurse $ModulePath | Unblock-File -Confirm:$false
 }
 catch {
-    Write-Output ""
-    Write-Output "Failed"
-    Write-Output $_.Exception.Message
-    Write-Output ""
+    Say ""
+    Say "Failed"
+    Say $_.Exception.Message
+    Say ""
 }
 
