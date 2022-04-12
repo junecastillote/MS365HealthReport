@@ -77,6 +77,25 @@ Function New-MS365IncidentReport {
         [boolean]
         $Consolidate = $true
     )
+
+    Function ReplaceSmartCharacter {
+        param(
+            [parameter(Mandatory)]
+            [string]$String
+        )
+
+        $characterTable = @{
+            '[\u2019\u2018]' = "'" # Single quote
+            '[\u201C\u201D]' = '"' # Double quote
+        }
+
+        $characterTable.Keys | ForEach-Object {
+            $stringToReplace = $_
+            $String = $String -replace $stringToReplace, $characterTable[$stringToReplace]
+        }
+        return $String
+    }
+
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $ModuleInfo = Get-Module $($MyInvocation.MyCommand.ModuleName)
     $Now = Get-Date
@@ -91,7 +110,7 @@ Function New-MS365IncidentReport {
         $SecureClientSecret = New-Object System.Security.SecureString
         $ClientSecret.toCharArray() | ForEach-Object { $SecureClientSecret.AppendChar($_) }
         $OAuth = Get-MsalToken -ClientId $ClientID -ClientSecret $SecureClientSecret -TenantId $tenantID -ErrorAction Stop
-        Sayinfo $($ClientSecret -replace $($ClientSecret.Substring(0,$ClientSecret.Length -8)),$('X'*$($ClientSecret.Substring(0,$ClientSecret.Length -8)).Length))
+        Sayinfo $($ClientSecret -replace $($ClientSecret.Substring(0, $ClientSecret.Length - 8)), $('X' * $($ClientSecret.Substring(0, $ClientSecret.Length - 8)).Length))
     }
     elseif ($pscmdlet.ParameterSetName -eq 'Client Certificate') {
         $OAuth = Get-MsalToken -ClientId $ClientID -ClientCertificate $ClientCertificate -TenantId $tenantID -ErrorAction Stop
@@ -209,11 +228,7 @@ Function New-MS365IncidentReport {
                         }
                     ) + '</td></tr>')
 
-
-                # https://4sysops.com/archives/dealing-with-smart-quotes-in-powershell/
                 $latestMessage = ($event.posts[-1].description.content) -replace "`n", "<br />"
-                $latestMessage = $latestMessage -replace '[\u2019\u2018]', "'"
-                $latestMessage = $latestMessage -replace '[\u201C\u201D]', '"'
 
                 $null = $htmlBody.Add('<tr><th>Latest Message</th><td>' + $latestMessage + '</td></tr>')
                 $null = $htmlBody.Add('</table>')
@@ -226,6 +241,13 @@ Function New-MS365IncidentReport {
             $null = $htmlBody.Add('</body>')
             $null = $htmlBody.Add('</html>')
             $htmlBody = $htmlBody -join "`n" #convert to multiline string
+
+            # https://4sysops.com/archives/dealing-with-smart-quotes-in-powershell/
+            # $smartSingleQuotes = '[\u2019\u2018]'
+            # $smartDoubleQuotes = '[\u201C\u201D]'
+            # $htmlBody = $htmlBody -replace $smartSingleQuotes, "'" -replace $smartDoubleQuotes, '"'
+
+            $htmlBody = ReplaceSmartCharacter $htmlBody
 
             if ($WriteReportToDisk -eq $true) {
                 $htmlBody | Out-File $event_id_file -Force
@@ -331,11 +353,7 @@ Function New-MS365IncidentReport {
                         }
                     ) + '</td></tr>')
 
-
-                # https://4sysops.com/archives/dealing-with-smart-quotes-in-powershell/
                 $latestMessage = ($event.posts[-1].description.content) -replace "`n", "<br />"
-                $latestMessage = $latestMessage -replace '[\u2019\u2018]', "'"
-                $latestMessage = $latestMessage -replace '[\u201C\u201D]', '"'
 
                 $null = $htmlBody.Add('<tr><th>Latest Message</th><td>' + $latestMessage + '</td></tr>')
                 $null = $htmlBody.Add('</table>')
@@ -346,6 +364,13 @@ Function New-MS365IncidentReport {
                 $null = $htmlBody.Add('</body>')
                 $null = $htmlBody.Add('</html>')
                 $htmlBody = $htmlBody -join "`n" #convert to multiline string
+
+                # https://4sysops.com/archives/dealing-with-smart-quotes-in-powershell/
+                # $smartSingleQuotes = '[\u2019\u2018]'
+                # $smartDoubleQuotes = '[\u201C\u201D]'
+                # $htmlBody = $htmlBody -replace $smartSingleQuotes, "'" -replace $smartDoubleQuotes, '"'
+
+                $htmlBody = ReplaceSmartCharacter $htmlBody
 
                 if ($WriteReportToDisk -eq $true) {
                     $htmlBody | Out-File $event_id_file -Force
@@ -424,7 +449,7 @@ Function New-MS365IncidentReport {
     #EndRegion Create Report
 
     # if ($StartFromLastRun) {
-        SayInfo "Setting last run time in the registry to $Now"
-        Set-MS365HealthReportLastRunTime -TenantID $tenantID -LastRunTime $Now
+    SayInfo "Setting last run time in the registry to $Now"
+    Set-MS365HealthReportLastRunTime -TenantID $tenantID -LastRunTime $Now
     # }
 }
