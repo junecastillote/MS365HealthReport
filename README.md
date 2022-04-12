@@ -2,6 +2,7 @@
 
 [![GitHub issues](https://img.shields.io/github/issues/junecastillote/MS365HealthReport)](https://github.com/junecastillote/MS365HealthReport/issues)
 [![GitHub forks](https://img.shields.io/github/forks/junecastillote/MS365HealthReport)](https://github.com/junecastillote/MS365HealthReport/network)
+[![GitHub issues](https://img.shields.io/github/stars/junecastillote/MS365HealthReport)](https://github.com/junecastillote/MS365HealthReport/issues)
 [![GitHub license](https://img.shields.io/github/license/junecastillote/MS365HealthReport)](https://github.com/junecastillote/MS365HealthReport/blob/main/LICENSE)
 
 - [Overview](#overview)
@@ -9,7 +10,7 @@
 - [Requirements](#requirements)
 - [How to Get the Module](#how-to-get-the-module)
   - [OPTION 1: Installing from PowerShell Gallery](#option-1-installing-from-powershell-gallery)
-  - [OPTION 2: Installing the Latest Release Manually](#option-2-installing-the-latest-release-manually)
+  - [Option 2: Installing from the Source](#option-2-installing-from-the-source)
 - [Syntax](#syntax)
   - [Parameter Set 1: Authenticate using Client Secret](#parameter-set-1-authenticate-using-client-secret)
   - [Parameter Set 2: Authenticate using Client Certificate](#parameter-set-2-authenticate-using-client-certificate)
@@ -32,39 +33,7 @@ Retrieve the Microsoft 365 Service Health status and send the email report using
 
 ## Release Notes
 
-**V2.0**
-
-- Removed Office 365 Service Communications API and replaced with Microsoft Graph API to read the service health events.
-- Removed the `JWTDetails` module as a requirement.
-- Added `-Status` parameter to filter query results based on status (`Ongoing` or `Closed`). This parameter is optional and if not used, all issues will be retrieved.
-- Added `Get-MS365HealthOverview` which you can use to retrieve the health overview summary only.
-- Removed `Get-MS365CurrentStatus` as it is no longer applicable. Use `Get-MS365HealthOverview` instead.
-
-**V1.4.2**
-
-- Fixed error in reading the last run timestamp from the registry.
-
-**V1.4.1**
-
-- Add "Classification" column to summary.
-- Add On-page anchor links in summary.
-
-**V1.4**
-
-- Add `-Consolidate` parameter (boolean) to consolidate reports in one email.
-
-**V1.3**
-
-- Code cleanup.
-- Fixed some JSON related errors.
-
-**V1.2**
-
-- Add code to force TLS 1.2 connection [Issue #2](https://github.com/junecastillote/MS365HealthReport/issues/1)
-
-**v1.1**
-
-- Added logic to replace smart quotes in messages [Issue #1](https://github.com/junecastillote/MS365HealthReport/issues/1)
+Go to [Release Notes](release_notes.md).
 
 ## Requirements
 
@@ -94,10 +63,10 @@ Install-Module MS365HealthReport
 
 Or if you're deploying to Azure Automation, you can directly [import from PowerShell gallery](https://docs.microsoft.com/en-us/azure/automation/shared-resources/modules#import-modules-from-the-powershell-gallery).
 
-### OPTION 2: Installing the Latest Release Manually
+### Option 2: Installing from the Source
 
-- Download the [latest release](https://github.com/junecastillote/MS365HealthReport/releases/latest)
-- Extract the zip file.
+- [Download](https://github.com/junecastillote/MS365HealthReport/archive/refs/heads/main.zip) or [Clone](https://github.com/junecastillote/MS365HealthReport.git) the code.
+- Extract the downloaded zip and/or go to the code folder.
 - Run the `InstallMe.ps1` script.
 
 ## Syntax
