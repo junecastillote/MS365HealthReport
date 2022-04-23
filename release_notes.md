@@ -9,6 +9,7 @@
 - Changed `LastRunTime` location from the registry to a CSV file on the user's home folder.
   - On Windows systems -  *`Env:\HOMEPATH\MS365HealthReport\<tenant>\runHistory.csv`*
   - On non-Windows systems -  *`Env:\HOME\MS365HealthReport\<tenant>\runHistory.csv`*
+- Now compatible with PowerShell on Linux.
 
 ## v2.1
 
