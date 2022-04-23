@@ -45,7 +45,7 @@ Go to [Release Notes](release_notes.md).
 
   ![Api Permissions](docs/images/api_permissions.png)<br>API Permissions
 
-- Windows PowerShell 5.1 or PowerShell 7.1+ on a Windows Host.
+- Windows PowerShell 5.1 or PowerShell 7.1+ on a Windows or Linux host (not tested with PowerShell on macOS).
 
 - The [*MSAL.PS PowerShell Module*](https://www.powershellgallery.com/packages/MSAL.PS/) must be installed on the computer where you will be running this script. The minimum version required is 4.16.0.4.
 
@@ -139,14 +139,14 @@ New-MS365IncidentReport
 
 ## Parameters
 
-- | Parameter                     | Notes                                                        |
+  | Parameter                     | Notes                                                        |
   | ----------------------------- | ------------------------------------------------------------ |
   | `ClientID`                    | This is the Client ID / Application ID of the registered Azure AD App. |
   | `ClientSecret`                | The client secret key associated with the registered Azure AD App. |
   | `ClientCertificate`           | If you uploaded a client certificate to the registered Azure AD App, you can use it instead of the client secret to authenticate.<br><br>To use this, you need to get the *X509Certificate2* object fromt certificate store.<br><br>eg.<br>`$certificate = Get-Item Cert:\CurrentUser\My\<certificate>`<br> |
   | `ClientCertificateThumbprint` | If you uploaded a client certificate to the registered Azure AD App, you can use it instead of the client secret to authenticate.<br><br>To use this, you only need to specify the certificate thumbprint. The script will automatically get the certificate from the personal certificate store.<br> |
   | `OrganizationName`            | The organization name you want to appear in the alerts/reports. This is not retrieved from Azure automatically to keep minimum API permissions. |
-  | `StartFromLastRun`            | Using this, the module gets the last run time from the registry `HKCU:\CurrentUser\My`. Then, only the incidents that were updated after the retrieved timestamp is reported. This is not recommended to use if you're running the module in Azure Automation. |
+  | `StartFromLastRun`            | Using this, the module gets the last run time from the history file. Then, only the incidents that were updated after the retrieved timestamp is reported. This is not recommended to use if you're running the module in Azure Automation.<br /><br />On Windows systems -  *`Env:\HOMEPATH\MS365HealthReport\<tenant>\runHistory.csv`*<br />On non-Windows systems -  *`Env:\HOME\MS365HealthReport\<tenant>\runHistory.csv`* |
   | `LastUpdatedTime`             | Use this if you want to limit the period of the report to include only the incidents that were updated after this time. |
   | `Workload`                    | By default, all workloads are reported. If you want to limit the report to specific workloads only, specify the workload names here.<br><br>NOTE: Workload names are case-sensitive. If you want to get all the list of exact workload names that are available in your tenant, use the `Get-MS365HealthOverview -Token <access token>` command included in this module, or view them using the Service Health dashboard on the Admin Centre. |
   | `Status`                      | New in v2. Filters the query result based on status. Valid values are:<br /><br />  `Ongoing` - for current open issues only.<br />  `Closed` - for returning only resolved issues.<br /><br />If you do not use this parameter, all (Ongoing and Closed) will be returned. |
@@ -184,7 +184,7 @@ New-MS365IncidentReport @reportSplat
 
 ### Example 2: Getting All Exchange and SharePoint Issues Updated Since the Last Run
 
-This example gets the last run time from the registry `HKCU:\CurrentUser\Software\MS365HealthReport\<TenantID>` and only return the updates after that time.
+This example gets the last run time from the history file and only return the updates after that time.
 
 Each alert is sent separately because the `Consolidate` parameter is set to `$false`.
 

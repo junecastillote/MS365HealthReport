@@ -1,10 +1,20 @@
 # Release Notes
 
-## V2.1
+## v2.1.1
+
+- Minor code change to properly display the "Status" values.
+  - Example: `extendedRecovery` = `Extended Recovery`
+  - Example: `serviceDegradation` = `Service Degradation`.
+- Added unicode space character replacement code.
+- Changed `LastRunTime` location from the registry to a CSV file on the user's home folder.
+  - On Windows systems -  *`Env:\HOMEPATH\MS365HealthReport\<tenant>\runHistory.csv`*
+  - On non-Windows systems -  *`Env:\HOME\MS365HealthReport\<tenant>\runHistory.csv`*
+
+## v2.1
 
 - Patched the smart quote replace code. Strings with smart single and double quotes are causing the email sending to fail.
 
-## V2.0
+## v2.0
 
 - Removed Office 365 Service Communications API and replaced with Microsoft Graph API to read the service health events.
 - Removed the `JWTDetails` module as a requirement.
@@ -12,25 +22,25 @@
 - Added `Get-MS365HealthOverview` which you can use to retrieve the health overview summary only.
 - Removed `Get-MS365CurrentStatus` as it is no longer applicable. Use `Get-MS365HealthOverview` instead.
 
-## V1.4.2
+## v1.4.2
 
 - Fixed error in reading the last run timestamp from the registry.
 
-## V1.4.1
+## v1.4.1
 
 - Add "Classification" column to summary.
 - Add On-page anchor links in summary.
 
-## V1.4
+## v1.4
 
 - Add `-Consolidate` parameter (boolean) to consolidate reports in one email.
 
-## V1.3
+## v1.3
 
 - Code cleanup.
 - Fixed some JSON related errors.
 
-## V1.2
+## v1.2
 
 - Add code to force TLS 1.2 connection [Issue #2](https://github.com/junecastillote/MS365HealthReport/issues/1)
 
