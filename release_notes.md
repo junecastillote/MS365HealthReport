@@ -1,5 +1,9 @@
 # Release Notes
 
+## v2.1.2
+
+- Fixed error in output directory handling whenever the `$ENV:HOME` or `$ENV:HOMEPATH` does not exist.
+
 ## v2.1.1
 
 - Minor code change to properly display the "Status" values.
