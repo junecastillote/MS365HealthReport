@@ -112,28 +112,17 @@ Function New-MS365IncidentReport {
     $now = Get-Date
 
     #Region Prepare Output Directory
-    # if ($WriteReportToDisk -eq $true) {
-        # if (isWindows) {
-        #     # $outputDir = ([System.IO.Path]::Combine($(Resolve-Path $Env:HOMEPATH), $($moduleInfo.Name), $($TenantID)))
-        #     $outputDir = ([System.IO.Path]::Combine($(Resolve-Path $Env:HOMEPATH), $($moduleInfo.Name), $($TenantID)))
-        # }
-        # else {
-        #     $outputDir = ([System.IO.Path]::Combine($(Resolve-Path $Env:HOME), $($moduleInfo.Name), $($TenantID)))
-        # }
+    $outputDir = ([System.IO.Path]::Combine([environment]::getfolderpath('userprofile'), $($moduleInfo.Name), $($TenantID)))
 
-        $outputDir = ([System.IO.Path]::Combine([environment]::getfolderpath('userprofile'), $($moduleInfo.Name), $($TenantID)))
+    if (!(Test-Path -Path $outputDir)) {
+        $null = New-Item -ItemType Directory -Path $outputDir -Force
+    }
 
-        # $outputDir = [environment]::getfolderpath('userprofile')
+    else {
+        Remove-Item -Path $outputDir\* -Exclude runHistory.csv -Force -Confirm:$false
+    }
+    SayInfo "Output Directory: $outputDir"
 
-        if (!(Test-Path -Path $outputDir)) {
-            $null = New-Item -ItemType Directory -Path $outputDir -Force
-        }
-
-        else {
-            Remove-Item -Path $outputDir\* -Exclude runHistory.csv -Force -Confirm:$false
-        }
-        SayInfo "Output Directory: $outputDir"
-    # }
     #EndRegion
 
     # Set the run times history file
