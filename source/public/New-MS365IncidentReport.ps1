@@ -113,12 +113,17 @@ Function New-MS365IncidentReport {
 
     #Region Prepare Output Directory
     # if ($WriteReportToDisk -eq $true) {
-        if (isWindows) {
-            $outputDir = ([System.IO.Path]::Combine($(Resolve-Path $Env:HOMEPATH), $($moduleInfo.Name), $($TenantID)))
-        }
-        else {
-            $outputDir = ([System.IO.Path]::Combine($(Resolve-Path $Env:HOME), $($moduleInfo.Name), $($TenantID)))
-        }
+        # if (isWindows) {
+        #     # $outputDir = ([System.IO.Path]::Combine($(Resolve-Path $Env:HOMEPATH), $($moduleInfo.Name), $($TenantID)))
+        #     $outputDir = ([System.IO.Path]::Combine($(Resolve-Path $Env:HOMEPATH), $($moduleInfo.Name), $($TenantID)))
+        # }
+        # else {
+        #     $outputDir = ([System.IO.Path]::Combine($(Resolve-Path $Env:HOME), $($moduleInfo.Name), $($TenantID)))
+        # }
+
+        $outputDir = ([System.IO.Path]::Combine([environment]::getfolderpath('userprofile'), $($moduleInfo.Name), $($TenantID)))
+
+        # $outputDir = [environment]::getfolderpath('userprofile')
 
         if (!(Test-Path -Path $outputDir)) {
             $null = New-Item -ItemType Directory -Path $outputDir -Force
