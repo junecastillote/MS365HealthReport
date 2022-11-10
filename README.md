@@ -158,7 +158,6 @@ New-MS365IncidentReport
   | `WriteReportToDisk`           | By default, the reports are saved to disk. If you don't want to save to disk, or if you're running this in Azure Automation, you can set this parameter to `$false`<br /><br />The default output folder is `$($env:USERPROFILE)\$($ModuleInfo.Name)\$($TenantID)`. |
   | `Consolidate`                 | Boolean parameter. If set to `$true` (default), the alerts are consolidated and sent in one email. If set to `$false`, each alert is sent separately. |
 
-
 ## Usage Examples
 
 ### Example 1: Getting the Open Issues Updated Within the Last 10 Days
@@ -210,4 +209,3 @@ New-MS365IncidentReport @reportSplat
 ## Screenshots
 
 ![Sample run](docs/images/image01.png)<br>Sample run
-
