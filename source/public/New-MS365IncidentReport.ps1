@@ -152,6 +152,16 @@ Function New-MS365IncidentReport {
         $OAuth = Get-MsalToken -ClientId $ClientID -ClientCertificate $ClientCertificate -TenantId $tenantID -ErrorAction Stop
     }
     elseif ($pscmdlet.ParameterSetName -eq 'Certificate Thumbprint') {
+        if (Test-Path Cert:\CurrentUser\My\$($ClientCertificateThumbprint)) {
+            $ClientCertificate = Get-Item Cert:\CurrentUser\My\$($ClientCertificateThumbprint) -ErrorAction Stop
+        }
+        elseif (Test-Path Cert:\LocalMachine\My\$($ClientCertificateThumbprint)) {
+            $ClientCertificate = Get-Item Cert:\LocalMachine\My\$($ClientCertificateThumbprint) -ErrorAction Stop
+        }
+        else {
+            SayError $_.Exception.Message
+            return $null
+        }
         $OAuth = Get-MsalToken -ClientId $ClientID -ClientCertificate (Get-Item Cert:\CurrentUser\My\$($ClientCertificateThumbprint)) -TenantId $tenantID -ErrorAction Stop
     }
 
