@@ -1,5 +1,10 @@
 # Release Notes
 
+## v2.1.3
+
+- If the `ClientCertificateThumbprint` is specified, the script will now look for the matching certificate in `Cert:\CurrentUser\My` and `Cert:\LocalMachine\My`.
+  - Reminder: `ClientCertificateThumbprint` is only applicable on Windows systems.
+
 ## v2.1.2
 
 - Fixed error in output directory handling whenever the `$ENV:HOME` or `$ENV:HOMEPATH` does not exist.
