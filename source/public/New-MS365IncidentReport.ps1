@@ -162,7 +162,7 @@ Function New-MS365IncidentReport {
             SayError $_.Exception.Message
             return $null
         }
-        $OAuth = Get-MsalToken -ClientId $ClientID -ClientCertificate (Get-Item Cert:\CurrentUser\My\$($ClientCertificateThumbprint)) -TenantId $tenantID -ErrorAction Stop
+        $OAuth = Get-MsalToken -ClientId $ClientID -ClientCertificate $ClientCertificate -TenantId $tenantID -ErrorAction Stop
     }
 
     $GraphAPIHeader = @{'Authorization' = "Bearer $($OAuth.AccessToken)" }
