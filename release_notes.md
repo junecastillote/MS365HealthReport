@@ -1,5 +1,9 @@
 # Release Notes
 
+## v2.1.4
+
+- Fixed the bad request (400) error when there's no Status, Workload, or LastUpdatedTime filter specified.
+
 ## v2.1.3
 
 - If the `ClientCertificateThumbprint` is specified, the script will now look for the matching certificate in `Cert:\CurrentUser\My` and `Cert:\LocalMachine\My`.

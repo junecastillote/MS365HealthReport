@@ -134,7 +134,6 @@ Function New-MS365IncidentReport {
         "$("{0:yyyy-MM-dd H:mm}" -f $now.AddDays(-30)),OK" | Add-Content -Path $RunHistoryFile -Force -Confirm:$false
     }
 
-
     if (!$OrganizationName) { $OrganizationName = $TenantID }
 
     SayInfo "Authentication type: $($pscmdlet.ParameterSetName)"
@@ -210,10 +209,7 @@ Function New-MS365IncidentReport {
 
     #EndRegion
 
-
-
     #Region Create Report
-
     ## Get the CSS style
     $css_string = Get-Content (($moduleInfo.ModuleBase.ToString()) + '\source\public\style.css') -Raw
 
@@ -286,7 +282,6 @@ Function New-MS365IncidentReport {
             }
 
             if ($SendEmail -eq $true) {
-
                 # Recipients
                 $toAddressJSON = @()
                 $To | ForEach-Object {
@@ -486,11 +481,11 @@ Function New-MS365IncidentReport {
     #EndRegion Create Report
 
     if ($errorFlag) {
-        SayInfo "Setting last run time (NotOK) in $($runHistoryFile) to $now"
+        SayInfo "Setting last run time (NotOK) in $($runHistoryFile) to $("{0:yyyy-MM-dd HH:mm}" -f $now)"
         "$("{0:yyyy-MM-dd H:mm}" -f $now),NotOK" | Add-Content -Path $RunHistoryFile -Force -Confirm:$false
     }
     else {
-        SayInfo "Setting last run time (OK) in $($runHistoryFile) to $now"
+        SayInfo "Setting last run time (OK) in $($runHistoryFile) to $("{0:yyyy-MM-dd HH:mm}" -f $now)"
         "$("{0:yyyy-MM-dd H:mm}" -f $now),OK" | Add-Content -Path $RunHistoryFile -Force -Confirm:$false
     }
 }
