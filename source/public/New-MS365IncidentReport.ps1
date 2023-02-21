@@ -75,7 +75,15 @@ Function New-MS365IncidentReport {
 
         [Parameter()]
         [boolean]
-        $Consolidate = $true
+        $Consolidate = $true,
+
+        [Parameter()]
+        [boolean]
+        $SendTeams = $false,
+
+        [Parameter()]
+        [string[]]
+        $TeamsWebHookURL
     )
 
 
@@ -211,9 +219,9 @@ Function New-MS365IncidentReport {
 
     #Region Create Report
     ## Get the CSS style
-    $css_string = Get-Content (($moduleInfo.ModuleBase.ToString()) + '\source\public\style.css') -Raw
+    $css_string = Get-Content (($moduleInfo.ModuleBase.ToString()) + '\source\private\style.css') -Raw
 
-    #Region Consolidate
+    #Region Consolidate Email
     if ($Consolidate) {
         if ($events.Count -gt 0) {
             $mailSubject = "[$($organizationName)] Microsoft 365 Service Health Report"
@@ -338,7 +346,6 @@ Function New-MS365IncidentReport {
                     SayInfo "Sending Consolidated Alert for $($events.id -join ';')"
                     $null = Invoke-RestMethod -Method Post -Uri "https://graph.microsoft.com/beta/users/$($From)/sendmail" -Body $mailBody -Headers $GraphAPIHeader -ContentType 'application/json'
                     # $null = $ServicePoint.CloseConnectionGroup('')
-
                 }
                 catch {
                     SayInfo "Failed to send Alert for $($events.id -join ';') | $($_.Exception.Message)"
@@ -348,8 +355,8 @@ Function New-MS365IncidentReport {
             }
         }
     }
-    #EndRegion Consolidate
-    #Region NoConsolidate
+    #EndRegion Consolidate Email
+    #Region NoConsolidate Email
     else {
         if ($events.Count -gt 0) {
             foreach ($event in ($events | Sort-Object Classification -Descending) ) {
@@ -476,7 +483,40 @@ Function New-MS365IncidentReport {
             }
         }
     }
-    #EndRegion NoConsolidate
+    #EndRegion NoConsolidate Email
+
+    if ($events.Count -gt 0) {
+        if ($SendTeams -eq $true -and $TeamsWebHookURL.Count -gt 0) {
+            #Region Consolidate (Teams)
+            if ($Consolidate -eq $true) {
+                $teamsAdaptiveCard = New-ConsolidatedCard -InputObject $events
+                SayInfo "Posting Alert to Teams Channel for $($events.id -join ';')"
+                foreach ($url in $TeamsWebHookURL) {
+                    $Params = @{
+                        "URI"         = $url
+                        "Method"      = 'POST'
+                        "Body"        = $teamsAdaptiveCard | ConvertTo-Json -Depth 50
+                        "ContentType" = 'application/json'
+                    }
+                    $result = Invoke-RestMethod @Params
+
+                    if ($result -eq 1) {
+                        SayInfo "OK. Posted to $url."
+                    }
+                    else {
+                        SayError "Failed to post to channel. $result."
+                    }
+                }
+            }
+            #EndRegion Consolidate (Teams)
+        }
+
+        #Region Don't Consolidate (Teams)
+        if ($SendTeams -eq $true -and $TeamsWebHookURL.Count -gt 0 -and $Consolidate -eq $false) {
+
+        }
+        #EndRegion Don't Consolidate (Teams)
+    }
 
     #EndRegion Create Report
 

@@ -1,0 +1,52 @@
+{
+    "type": "message",
+    "attachments": [
+        {
+            "contentType": "application/vnd.microsoft.card.adaptive",
+            "contentUrl": null,
+            "content": {
+                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                "type": "AdaptiveCard",
+                "msTeams": {
+                    "width": "full"
+                },
+                "version": "1.4",
+                "body": [
+                    {
+                        "type": "ColumnSet",
+                        "style": "accent",
+                        "bleed": true,
+                        "separator": true,
+                        "columns": [
+                            {
+                                "type": "Column",
+                                "width": "auto",
+                                "items": [
+                                    {
+                                        "type": "Image",
+                                        "url": "https://raw.githubusercontent.com/junecastillote/MS365HealthReport/v2.1.5-dev/docs/images/ms365_health_max.png",
+                                        "size": "Medium",
+                                        "altText": "MS365HealthReport",
+                                        "style": "Person"
+                                    }
+                                ]
+                            },
+                            {
+                                "type": "Column",
+                                "width": "stretch",
+                                "separator": true,
+                                "items": [
+                                    {
+                                        "type": "TextBlock",
+                                        "text": "Hello! Here are the new and updated service health alerts in your Microsoft 365 tenant.",
+                                        "wrap": true
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                ]
+            }
+        }
+    ]
+}
