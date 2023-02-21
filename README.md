@@ -10,7 +10,7 @@
 - [Requirements](#requirements)
 - [How to Get the Module](#how-to-get-the-module)
   - [~~OPTION 1: Installing from PowerShell Gallery~~](#option-1-installing-from-powershell-gallery)
-  - [OPTION 2: Installing from the Source](#option-2-installing-from-the-source)
+  - [OPTION 2: Download from GitHub](#option-2-download-from-github)
 - [Syntax](#syntax)
   - [Parameter Set 1: Authenticate using Client Secret](#parameter-set-1-authenticate-using-client-secret)
   - [Parameter Set 2: Authenticate using Client Certificate](#parameter-set-2-authenticate-using-client-certificate)
@@ -68,7 +68,7 @@ Install-Module MS365HealthReport
 
 ~~Or if you're deploying to Azure Automation, you can directly [import from PowerShell gallery](https://docs.microsoft.com/en-us/azure/automation/shared-resources/modules#import-modules-from-the-powershell-gallery).~~
 
-### OPTION 2: Installing from the Source
+### OPTION 2: Download from GitHub
 
 - [Download](https://github.com/junecastillote/MS365HealthReport/archive/refs/heads/main.zip) or [Clone](https://github.com/junecastillote/MS365HealthReport.git) the code.
 - Extract the downloaded zip and/or go to the code folder.
