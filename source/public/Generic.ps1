@@ -68,3 +68,12 @@ Function isWindows {
         return $false
     }
 }
+
+Function IsPsCore {
+    if ($PSVersionTable.PSEdition -eq 'Core') {
+        return $true
+    }
+    else {
+        return $false
+    }
+}

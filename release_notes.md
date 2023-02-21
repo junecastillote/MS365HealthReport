@@ -1,5 +1,13 @@
 # Release Notes
 
+## v2.1.5
+
+- Added `NoResult` runtime status to the Run History File when there are no new or updated events.
+- Added functionality to send consolidated notifications to Teams Webhook.
+  - The Teams-related parameters are:
+    - `-SendTeams <boolean>`. Default is `$false`.
+    - `-TeamsWebHookURL <string[]>`. Accepts an array of Teams incoming webhook URLs.
+
 ## v2.1.4
 
 - Fixed the bad request (400) error when there's no Status, Workload, or LastUpdatedTime filter specified.
