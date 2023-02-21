@@ -1,3 +1,5 @@
+# This function creates a consolidated Teams report
+# using adaptive cards 1.4.
 Function New-ConsolidatedCard {
     [CmdletBinding()]
     param (

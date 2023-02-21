@@ -86,6 +86,11 @@ Function New-MS365IncidentReport {
         $TeamsWebHookURL
     )
 
+    if ($StartFromLastRun -and $LastUpdatedTime) {
+        SayWarning "Do not use -StartFromLastRun and -LastUpdatedTime at the same time."
+        return $null
+    }
+
 
     Function ReplaceSmartCharacter {
         #https://4sysops.com/archives/dealing-with-smart-quotes-in-powershell/
@@ -488,32 +493,33 @@ Function New-MS365IncidentReport {
     if ($events.Count -gt 0) {
         if ($SendTeams -eq $true -and $TeamsWebHookURL.Count -gt 0) {
             #Region Consolidate (Teams)
-            if ($Consolidate -eq $true) {
-                $teamsAdaptiveCard = New-ConsolidatedCard -InputObject $events
-                SayInfo "Posting Alert to Teams Channel for $($events.id -join ';')"
-                foreach ($url in $TeamsWebHookURL) {
-                    $Params = @{
-                        "URI"         = $url
-                        "Method"      = 'POST'
-                        "Body"        = $teamsAdaptiveCard | ConvertTo-Json -Depth 50
-                        "ContentType" = 'application/json'
-                    }
-                    $result = Invoke-RestMethod @Params
+            # if ($Consolidate -eq $true) {
+            $teamsAdaptiveCard = New-ConsolidatedCard -InputObject $events
+            SayInfo "Posting Alert to Teams Channel for $($events.id -join ';')"
+            foreach ($url in $TeamsWebHookURL) {
+                $Params = @{
+                    "URI"         = $url
+                    "Method"      = 'POST'
+                    "Body"        = $teamsAdaptiveCard | ConvertTo-Json -Depth 50
+                    "ContentType" = 'application/json'
+                }
+                $result = Invoke-RestMethod @Params
 
-                    if ($result -eq 1) {
-                        SayInfo "OK. Posted to $url."
-                    }
-                    else {
-                        SayError "Failed to post to channel. $result."
-                    }
+                if ($result -eq 1) {
+                    # SayInfo "OK. Posted to $url."
+                }
+                else {
+                    SayError "Failed to post to channel. $result."
                 }
             }
+            # }
             #EndRegion Consolidate (Teams)
         }
 
         #Region Don't Consolidate (Teams)
         if ($SendTeams -eq $true -and $TeamsWebHookURL.Count -gt 0 -and $Consolidate -eq $false) {
 
+            ## TODO: Add per event Teams notification.
         }
         #EndRegion Don't Consolidate (Teams)
     }
@@ -523,6 +529,10 @@ Function New-MS365IncidentReport {
     if ($errorFlag) {
         SayInfo "Setting last run time (NotOK) in $($runHistoryFile) to $("{0:yyyy-MM-dd HH:mm}" -f $now)"
         "$("{0:yyyy-MM-dd H:mm}" -f $now),NotOK" | Add-Content -Path $RunHistoryFile -Force -Confirm:$false
+    }
+    elseif ($events.Count -lt 1) {
+        SayInfo "Setting last run time (NoResult) in $($runHistoryFile) to $("{0:yyyy-MM-dd HH:mm}" -f $now)"
+        "$("{0:yyyy-MM-dd H:mm}" -f $now),NoResult" | Add-Content -Path $RunHistoryFile -Force -Confirm:$false
     }
     else {
         SayInfo "Setting last run time (OK) in $($runHistoryFile) to $("{0:yyyy-MM-dd HH:mm}" -f $now)"
