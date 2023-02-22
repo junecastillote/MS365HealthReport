@@ -1,5 +1,11 @@
 # Release Notes
 
+## v2.1.6 (2023-02-22)
+
+- Fixed the Teams notification error that happens when the JSON payload shows {} for null in Windows PowerShell. This error does not happen in PowerShell 7.
+  - It appears that ConvertTo-Json in Windows PowerShell outputs empty values as `{}`, while PowerShell 7 outputs empty as `null` - which is the correct one for Teams adaptive cards.
+- Added replacement for `\u0027` (unicode apostrophe) to `'`.
+
 ## v2.1.5
 
 - Added `NoResult` runtime status to the Run History File when there are no new or updated events.

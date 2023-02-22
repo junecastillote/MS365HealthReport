@@ -91,29 +91,6 @@ Function New-MS365IncidentReport {
         return $null
     }
 
-
-    Function ReplaceSmartCharacter {
-        #https://4sysops.com/archives/dealing-with-smart-quotes-in-powershell/
-        param(
-            [parameter(Mandatory)]
-            [string]$String
-        )
-
-        # Unicode Quote Characters
-        $unicodePattern = @{
-            '[\u2019\u2018]'                                                                                                                       = "'" # Single quote
-            '[\u201C\u201D]'                                                                                                                       = '"' # Double quote
-            '\u00A0|\u1680|\u180E|\u2000|\u2001|\u2002|\u2003|\u2004|\u2005|\u2006|\u2007|\u2008|\u2009|\u200A|\u200B|\u202F|\u205F|\u3000|\uFEFF' = " " # Space
-        }
-
-        $unicodePattern.Keys | ForEach-Object {
-            $stringToReplace = $_
-            $String = $String -replace $stringToReplace, $unicodePattern[$stringToReplace]
-        }
-
-        return $String
-    }
-
     [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
     $moduleInfo = Get-Module $($MyInvocation.MyCommand.ModuleName)
 
@@ -270,7 +247,7 @@ Function New-MS365IncidentReport {
                             "{0:yyyy-MM-dd H:mm}" -f [datetime]$event.endDateTime
                         }
                         else {
-                            ""
+                            $null
                         }
                     ) + '</td></tr>')
 
@@ -390,7 +367,7 @@ Function New-MS365IncidentReport {
                             [datetime]$event.endDateTime
                         }
                         else {
-                            ""
+                            $null
                         }
                     ) + '</td></tr>')
 
@@ -406,14 +383,8 @@ Function New-MS365IncidentReport {
                 $null = $htmlBody.Add('</html>')
                 $htmlBody = $htmlBody -join "`n" #convert to multiline string
 
-                # https://4sysops.com/archives/dealing-with-smart-quotes-in-powershell/
-                # $smartSingleQuotes = '[\u2019\u2018]'
-                # $smartDoubleQuotes = '[\u201C\u201D]'
-                # $htmlBody = $htmlBody -replace $smartSingleQuotes, "'" -replace $smartDoubleQuotes, '"'
-
                 $htmlBody = ReplaceSmartCharacter $htmlBody
                 # $htmlBody | Out-File -FilePath $env:temp
-
 
                 if ($WriteReportToDisk -eq $true) {
                     $htmlBody | Out-File $event_id_file -Force
@@ -501,6 +472,7 @@ Function New-MS365IncidentReport {
                     "URI"         = $url
                     "Method"      = 'POST'
                     "Body"        = $teamsAdaptiveCard | ConvertTo-Json -Depth 50
+                    # "Body"        = $teamsAdaptiveCard
                     "ContentType" = 'application/json'
                 }
                 $result = Invoke-RestMethod @Params
@@ -510,6 +482,7 @@ Function New-MS365IncidentReport {
                 }
                 else {
                     SayError "Failed to post to channel. $result."
+                    $errorFlag = $true
                 }
             }
             # }

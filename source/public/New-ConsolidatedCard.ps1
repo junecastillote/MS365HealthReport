@@ -40,7 +40,16 @@ Function New-ConsolidatedCard {
                 $([pscustomobject][ordered]@{Title = 'Status'; Value = ($InputObject.Status.substring(0, 1).toupper() + $InputObject.Status.substring(1) -creplace '[^\p{Ll}\s]', ' $&').Trim(); } ),
                 $([pscustomobject][ordered]@{Title = 'Update'; Value = ("{0:MMMM dd, yyyy hh:mm tt}" -f [datetime]$InputObject.lastModifiedDateTime) }),
                 $([pscustomobject][ordered]@{Title = 'Start'; Value = ("{0:MMMM dd, yyyy hh:mm tt}" -f [datetime]$InputObject.startDateTime) }),
-                $([pscustomobject][ordered]@{Title = 'End'; Value = $(if ($InputObject.endDateTime) { ("{0:MMMM dd, yyyy hh:mm tt}" -f [datetime]$InputObject.startDateTime) }) })
+                $([pscustomobject][ordered]@{Title = 'End'; Value = $(
+                            if ($InputObject.endDateTime) {
+                                 ("{0:MMMM dd, yyyy hh:mm tt}" -f [datetime]$InputObject.startDateTime)
+                            }
+                            else {
+                                $null
+                            }
+                        )
+                    }
+                )
             )
         }
         return @($factHeader, $factSet)
@@ -50,5 +59,6 @@ Function New-ConsolidatedCard {
     foreach ($item in $InputObject) {
         $teamsAdaptiveCard.attachments[0].content.body += (New-FactItem -InputObject $item)
     }
+    # $teamsAdaptiveCard = (($teamsAdaptiveCard | ConvertTo-Json -Depth 50))
     return $teamsAdaptiveCard
 }
