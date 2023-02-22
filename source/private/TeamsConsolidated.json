@@ -24,7 +24,7 @@
                                 "items": [
                                     {
                                         "type": "Image",
-                                        "url": "https://raw.githubusercontent.com/junecastillote/MS365HealthReport/v2.1.5-dev/docs/images/ms365_health_max.png",
+                                        "url": "https://raw.githubusercontent.com/junecastillote/MS365HealthReport/main/docs/images/ms365_health.png",
                                         "size": "Medium",
                                         "altText": "MS365HealthReport",
                                         "style": "Person"
