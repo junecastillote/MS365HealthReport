@@ -1,11 +1,5 @@
 # Release Notes
 
-## v2.1.7 (2023-03-08)
-
-- Added optional parameter (-RunHistoryFile).
-  - Use this parameter to specify a custom path for the history file.
-  - If not used, the default history file path will be used instead.
-
 ## v2.1.6 (2023-02-22)
 
 - Fixed the Teams notification error that happens when the JSON payload shows {} for null in Windows PowerShell. This error does not happen in PowerShell 7.
