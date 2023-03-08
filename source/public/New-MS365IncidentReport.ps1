@@ -83,7 +83,11 @@ Function New-MS365IncidentReport {
 
         [Parameter()]
         [string[]]
-        $TeamsWebHookURL
+        $TeamsWebHookURL,
+
+        [Parameter()]
+        [string]
+        $RunHistoryFile
     )
 
     if ($StartFromLastRun -and $LastUpdatedTime) {
@@ -109,20 +113,33 @@ Function New-MS365IncidentReport {
     }
 
     else {
-        Remove-Item -Path $outputDir\* -Exclude runHistory.csv -Force -Confirm:$false
+        [System.Collections.ArrayList]$excludeFiles = @('runHistory.csv')
+        if ($RunHistoryFile) {
+            $null = $excludeFiles.Add($(Split-Path $RunHistoryFile -Leaf))
+        }
+        Remove-Item -Path $outputDir\* -Exclude $excludeFiles -Force -Confirm:$false
     }
     SayInfo "Output Directory: $outputDir"
 
     #EndRegion
 
-    # Set the run times history file
-    $runHistoryFile = ([System.IO.Path]::Combine($outputDir, "runHistory.csv" ))
+    # Set the run times history file if it isn't specified.
+    if (!($RunHistoryFile)) {
+        $runHistoryFile = ([System.IO.Path]::Combine($outputDir, "runHistory.csv" ))
+    }
+
+
+
     # Create the history file if it doesn't exist.
     if (!(Test-Path $RunHistoryFile) -or !(Get-Content $RunHistoryFile -Raw -ErrorAction SilentlyContinue)) {
+        SayInfo "Creating $RunHistoryFile"
         "RunTime,Status" | Set-Content -Path $RunHistoryFile -Force -Confirm:$false
-        # Add initial entry 'OK' (which means successful) dated 30 days ago. This way there will always be a starting point.
-        "$("{0:yyyy-MM-dd H:mm}" -f $now.AddDays(-30)),OK" | Add-Content -Path $RunHistoryFile -Force -Confirm:$false
+        # Add initial entry 'OK' (which means successful) dated 7 days ago. This way there will always be a starting point.
+        "$("{0:yyyy-MM-dd H:mm}" -f $now.AddDays(-7)),OK" | Add-Content -Path $RunHistoryFile -Force -Confirm:$false
     }
+
+    $RunHistoryFile = (Resolve-Path $RunHistoryFile).Path
+    SayInfo "History File = $($RunHistoryFile)"
 
     if (!$OrganizationName) { $OrganizationName = $TenantID }
 
@@ -180,7 +197,7 @@ Function New-MS365IncidentReport {
     ## If -LastUpdatedTime, this function will only get the incidents whose LastUpdatedTime is after the $LastUpdatedTime datetime value.
     if ($LastUpdatedTime) {
         $searchParam += (@{LastUpdatedTime = $LastUpdatedTime })
-        SayInfo "Getting incidents from the last successful run time: $LastUpdatedTime"
+        SayInfo "Getting incidents from the last successful run time (with results): $LastUpdatedTime"
     }
 
     if ($Workload) {
