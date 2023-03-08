@@ -83,7 +83,11 @@ Function New-MS365IncidentReport {
 
         [Parameter()]
         [string[]]
-        $TeamsWebHookURL
+        $TeamsWebHookURL,
+
+        [Parameter()]
+        [string]
+        $RunHistoryFile
     )
 
     if ($StartFromLastRun -and $LastUpdatedTime) {
@@ -115,14 +119,21 @@ Function New-MS365IncidentReport {
 
     #EndRegion
 
-    # Set the run times history file
-    $runHistoryFile = ([System.IO.Path]::Combine($outputDir, "runHistory.csv" ))
+    # Set the run times history file if it isn't specified.
+    if (!($RunHistoryFile)) {
+        $runHistoryFile = ([System.IO.Path]::Combine($outputDir, "runHistory.csv" ))
+    }
+
+    # $runHistoryFile = ([System.IO.Path]::Combine($outputDir, "runHistory.csv" ))
     # Create the history file if it doesn't exist.
     if (!(Test-Path $RunHistoryFile) -or !(Get-Content $RunHistoryFile -Raw -ErrorAction SilentlyContinue)) {
         "RunTime,Status" | Set-Content -Path $RunHistoryFile -Force -Confirm:$false
-        # Add initial entry 'OK' (which means successful) dated 30 days ago. This way there will always be a starting point.
-        "$("{0:yyyy-MM-dd H:mm}" -f $now.AddDays(-30)),OK" | Add-Content -Path $RunHistoryFile -Force -Confirm:$false
+        # Add initial entry 'OK' (which means successful) dated 7 days ago. This way there will always be a starting point.
+        "$("{0:yyyy-MM-dd H:mm}" -f $now.AddDays(-7)),OK" | Add-Content -Path $RunHistoryFile -Force -Confirm:$false
     }
+
+    $RunHistoryFile = (Resolve-Path $RunHistoryFile).Path
+
 
     if (!$OrganizationName) { $OrganizationName = $TenantID }
 
