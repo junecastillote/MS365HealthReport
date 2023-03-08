@@ -127,7 +127,7 @@ Function New-MS365IncidentReport {
     # $runHistoryFile = ([System.IO.Path]::Combine($outputDir, "runHistory.csv" ))
     # Create the history file if it doesn't exist.
     # if (!(Test-Path $RunHistoryFile) -or !(Get-Content $RunHistoryFile -Raw -ErrorAction SilentlyContinue)) {
-    if (Test-Path $RunHistoryFile -eq $false) {
+    if ((Test-Path $RunHistoryFile) -eq $false) {
         SayInfo "Creating $RunHistoryFile"
         "RunTime,Status" | Set-Content -Path $RunHistoryFile -Force -Confirm:$false
         # Add initial entry 'OK' (which means successful) dated 7 days ago. This way there will always be a starting point.
