@@ -152,7 +152,7 @@ Function New-MS365IncidentReport {
         $SecureClientSecret = New-Object System.Security.SecureString
         $ClientSecret.toCharArray() | ForEach-Object { $SecureClientSecret.AppendChar($_) }
         $OAuth = Get-MsalToken -ClientId $ClientID -ClientSecret $SecureClientSecret -TenantId $tenantID -ErrorAction Stop
-        Sayinfo $($ClientSecret -replace $($ClientSecret.Substring(0, $ClientSecret.Length - 8)), $('X' * $($ClientSecret.Substring(0, $ClientSecret.Length - 8)).Length))
+        SayInfo $($ClientSecret -replace $($ClientSecret.Substring(0, $ClientSecret.Length - 8)), $('X' * $($ClientSecret.Substring(0, $ClientSecret.Length - 8)).Length))
     }
     elseif ($pscmdlet.ParameterSetName -eq 'Client Certificate') {
         $OAuth = Get-MsalToken -ClientId $ClientID -ClientCertificate $ClientCertificate -TenantId $tenantID -ErrorAction Stop
@@ -181,7 +181,7 @@ Function New-MS365IncidentReport {
 
     #Region Get Incidents
     $searchParam = @{
-        Token = ($OAuth.AccessToken);
+        Token = ($OAuth.AccessToken)
     }
 
     if ($Status) {
@@ -238,7 +238,7 @@ Function New-MS365IncidentReport {
             $null = $htmlBody.Add('<table id="data">')
             $null = $htmlBody.Add("<tr><th>Workload</th><th>Event ID</th><th>Classification</th><th>Status</th><th>Title</th></tr>")
             foreach ($event in ($events | Sort-Object Classification -Descending)) {
-                $ticket_status = ($event.Status.substring(0, 1).toupper() + $event.Status.substring(1) -creplace '[^\p{Ll}\s]', ' $&').Trim();
+                $ticket_status = ($event.Status.substring(0, 1).toupper() + $event.Status.substring(1) -creplace '[^\p{Ll}\s]', ' $&').Trim()
                 $null = $htmlBody.Add("<tr><td>$($event.Service)</td>
                 <td>" + '<a href="#' + $($event.ID) + '">' + "$($event.ID)</a></td>
                 <td>$($event.Classification.substring(0, 1).toupper() + $event.Classification.substring(1))</td>
@@ -248,7 +248,7 @@ Function New-MS365IncidentReport {
             $null = $htmlBody.Add('</table>')
 
             foreach ($event in $events | Sort-Object Classification -Descending) {
-                $ticket_status = ($event.Status.substring(0, 1).toupper() + $event.Status.substring(1) -creplace '[^\p{Ll}\s]', ' $&').Trim();
+                $ticket_status = ($event.Status.substring(0, 1).toupper() + $event.Status.substring(1) -creplace '[^\p{Ll}\s]', ' $&').Trim()
                 $null = $htmlBody.Add("<hr>")
                 $null = $htmlBody.Add('<table id="section"><tr><th><a name="' + $event.ID + '">' + $event.ID + '</a> | ' + $event.Service + ' | ' + $event.Title + '</th></tr></table>')
                 $null = $htmlBody.Add("<hr>")
@@ -359,7 +359,7 @@ Function New-MS365IncidentReport {
     else {
         if ($events.Count -gt 0) {
             foreach ($event in ($events | Sort-Object Classification -Descending) ) {
-                $ticket_status = ($event.Status.substring(0, 1).toupper() + $event.Status.substring(1) -creplace '[^\p{Ll}\s]', ' $&').Trim();
+                $ticket_status = ($event.Status.substring(0, 1).toupper() + $event.Status.substring(1) -creplace '[^\p{Ll}\s]', ' $&').Trim()
                 $mailSubject = "[$($organizationName)] MS365 Service Health Report | $($event.id) | $($event.Service)"
                 $event_id_file = "$outputDir\$($event.ID).html"
                 $event_id_json_file = "$outputDir\$($event.ID).json"
@@ -492,14 +492,14 @@ Function New-MS365IncidentReport {
                     # "Body"        = $teamsAdaptiveCard
                     "ContentType" = 'application/json'
                 }
-                $result = Invoke-RestMethod @Params
-
-                if ($result -eq 1) {
-                    # SayInfo "OK. Posted to $url."
+                try {
+                    # $result = Invoke-RestMethod @Params -ErrorAction Stop
+                    Invoke-RestMethod @Params -ErrorAction Stop
                 }
-                else {
-                    SayError "Failed to post to channel. $result."
+                catch {
                     $errorFlag = $true
+                    SayError "Failed to post to channel. $($_.Exception.Message)"
+
                 }
             }
             # }

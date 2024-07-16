@@ -1,5 +1,9 @@
 # Release Notes
 
+## v2.1.7 (2024-07-24)
+
+- Reworked error handling in `New-MS365IncidentReport` for Teams notification in relation to [Retirement of Office 365 connectors within Microsoft Teams](https://devblogs.microsoft.com/microsoft365dev/retirement-of-office-365-connectors-within-microsoft-teams/)
+
 ## v2.1.6 (2023-02-22)
 
 - Fixed the Teams notification error that happens when the JSON payload shows {} for null in Windows PowerShell. This error does not happen in PowerShell 7.
