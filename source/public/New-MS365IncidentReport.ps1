@@ -492,16 +492,14 @@ Function New-MS365IncidentReport {
                     # "Body"        = $teamsAdaptiveCard
                     "ContentType" = 'application/json'
                 }
-                $result = Invoke-RestMethod @Params
-
-                $result
-
-                if ($result -eq 1) {
-                    # SayInfo "OK. Posted to $url."
+                try {
+                    # $result = Invoke-RestMethod @Params -ErrorAction Stop
+                    Invoke-RestMethod @Params -ErrorAction Stop
                 }
-                else {
-                    SayError "Failed to post to channel. $result."
+                catch {
                     $errorFlag = $true
+                    SayError "Failed to post to channel. $($_.Exception.Message)"
+
                 }
             }
             # }
