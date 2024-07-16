@@ -494,6 +494,8 @@ Function New-MS365IncidentReport {
                 }
                 $result = Invoke-RestMethod @Params
 
+                $result | Format-List *
+
                 if ($result -eq 1) {
                     # SayInfo "OK. Posted to $url."
                 }
